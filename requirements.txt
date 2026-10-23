@@ -1,0 +1,29 @@
+# EduPredict — dépendances Python
+# Installer avec : pip install -r requirements.txt
+ 
+# API Web
+flask>=3.0.0
+flask-cors>=4.0.0
+ 
+# Serveur de production (remplace le serveur Flask built-in)
+waitress>=3.0.0
+ 
+# Machine Learning
+tensorflow-cpu>=2.15.0
+scikit-learn>=1.3.0
+numpy>=1.24.0
+ 
+# Données & Visualisation (optionnel — pour notebooks/analyse)
+pandas>=2.0.0
+matplotlib>=3.7.0
+ 
+# Base de données (optionnel — pour db_check.py)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Chargement des identifiants depuis un fichier .env (optionnel)
+python-dotenv>=1.0.0
+
+# Chatbot (assistant ancré sur les données du projet)
+anthropic>=0.40.0
+ 

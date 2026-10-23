@@ -1,0 +1,3694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduPredict — Plateforme d'analyse et de prédiction scolaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════
+   ROOT VARIABLES
+══════════════════════════════════════════════ */
+:root {
+  --tn-red: #E70013;
+  --tn-red-dark: #B8000E;
+  --tn-red-soft: #fde8ea;
+
+  --bg: #f6f7f9;
+  --bg-2: #ffffff;
+  --bg-3: #fafbfc;
+  --ink: #0f172a;
+  --ink-2: #1e293b;
+  --ink-3: #334155;
+  --ink-4: #64748b;
+  --ink-5: #94a3b8;
+  --ink-6: #cbd5e1;
+  --ink-7: #e2e8f0;
+  --ink-8: #eef2f6;
+
+  --border: #e6eaf0;
+  --border-2: #cbd5e1;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 2px 4px -1px rgba(15, 23, 42, 0.05), 0 8px 20px -6px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 4px 10px -2px rgba(15, 23, 42, 0.06), 0 16px 36px -10px rgba(15, 23, 42, 0.14);
+  --shadow-3d: 0 8px 22px -6px rgba(15, 23, 42, 0.14), 0 18px 48px -12px rgba(15, 23, 42, 0.12);
+
+  --ok: #047857;
+  --ok-soft: #d1fae5;
+  --warn: #b45309;
+  --warn-soft: #fef3c7;
+  --bad: #b91c1c;
+  --bad-soft: #fee2e2;
+  --info: #1d4ed8;
+  --info-soft: #dbeafe;
+
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+
+  --sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --arabic: 'IBM Plex Sans Arabic', sans-serif;
+  --mono: 'JetBrains Mono', 'Space Mono', monospace;
+
+  --r: 6px;
+  --r2: 10px;
+  --r3: 14px;
+  --r4: 18px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 88% 14%, rgba(231, 0, 19, 0.025) 0%, transparent 28%),
+    linear-gradient(135deg, transparent 60%, rgba(231, 0, 19, 0.015) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.018) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN PAGE
+══════════════════════════════════════════════ */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 24px;
+}
+
+.lp-shell {
+  width: 100%;
+  max-width: 900px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: var(--r4);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  box-shadow: var(--shadow-lg);
+  animation: loginAppear 0.5s var(--ease-out) both;
+}
+@keyframes loginAppear {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Left panel */
+.lp-left {
+  background: var(--tn-red);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.lp-left::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+}
+.lp-left::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 150px; height: 150px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+.lp-left-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.lp-logo {
+  display: flex; align-items: center; gap: 12px;
+  position: relative; z-index: 1;
+}
+.lp-logo-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: #fff;
+  letter-spacing: .5px;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.lp-logo-text { color: #fff; font-size: 17px; font-weight: 700; line-height: 1.2; }
+.lp-logo-text small { display: block; font-size: 11px; opacity: .75; font-weight: 400; font-family: var(--arabic); direction: rtl; }
+
+.lp-tagline { position: relative; z-index: 1; }
+.lp-tagline h2 { color: #fff; font-size: 21px; font-weight: 700; line-height: 1.35; margin-bottom: .75rem; }
+.lp-tagline p { color: rgba(255,255,255,.75); font-size: 12.5px; line-height: 1.65; }
+
+.lp-roles-preview { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+.lp-role-pill {
+  background: rgba(255,255,255,.13);
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: var(--r2);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  color: #fff; font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+.lp-role-pill:hover { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.4); }
+.lp-role-pill .rp-icon { font-size: 18px; }
+.lp-role-pill .rp-name { font-weight: 600; }
+.lp-role-pill .rp-desc { opacity: .7; margin-left: auto; font-size: 11px; }
+
+.lp-flag {
+  display: flex; align-items: center; gap: 8px;
+  position: relative; z-index: 1;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.15);
+}
+.lp-flag-block {
+  width: 24px; height: 16px;
+  border-radius: 2px;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; overflow: hidden;
+}
+.lp-flag-block::before { content: '☪'; color: var(--tn-red); font-size: 11px; }
+.lp-flag-text { color: rgba(255,255,255,.8); font-size: 11px; }
+
+/* Right panel */
+.lp-right {
+  padding: 2.5rem 2rem;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.lp-heading { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.lp-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 1.75rem; }
+
+/* Role tabs */
+.role-tabs {
+  display: flex; gap: 6px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: var(--r2);
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+.role-tab {
+  flex: 1; padding: 9px 6px;
+  border: none; background: transparent;
+  border-radius: var(--r);
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  transition: all .2s var(--ease-out);
+  font-family: var(--sans);
+}
+.role-tab .rt-icon { font-size: 20px; }
+.role-tab:hover { background: #fff; color: var(--text-2); }
+.role-tab.active {
+  background: #fff;
+  color: var(--tn-red);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+/* Scope badge */
+.scope-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px;
+  border-radius: var(--r);
+  font-size: 11px; font-weight: 500;
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+.scope-admin    { background: var(--tn-red-soft); color: var(--tn-red-dark); border: 1px solid rgba(231,0,19,.15); }
+.scope-directeur{ background: var(--info-soft);   color: var(--info);       border: 1px solid rgba(29,78,216,.15); }
+.scope-inspecteur{ background: var(--ok-soft);    color: var(--ok);         border: 1px solid rgba(4,120,87,.15); }
+
+/* Form */
+.form-group { margin-bottom: 13px; }
+.form-label {
+  display: block;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-3);
+  margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.form-input-wrap { position: relative; }
+.form-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--text);
+  transition: border-color .2s var(--ease-out), background .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.form-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--tn-red);
+  box-shadow: 0 0 0 3px rgba(231,0,19,.08);
+}
+.form-input-icon {
+  position: absolute;
+  left: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.form-input.has-icon { padding-left: 34px; }
+.form-pwd-toggle {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--text-3); cursor: pointer;
+  padding: 2px; font-size: 16px;
+}
+.form-pwd-toggle:hover { color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.form-link {
+  font-size: 11.5px; color: var(--tn-red);
+  text-decoration: none; cursor: pointer;
+  display: block; text-align: right; margin-top: 4px;
+}
+.form-link:hover { text-decoration: underline; }
+
+/* Login button */
+.btn-login {
+  width: 100%;
+  padding: 12px;
+  background: var(--tn-red);
+  border: none; border-radius: var(--r2);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 13.5px; font-weight: 600;
+  letter-spacing: .2px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 2px 8px rgba(231,0,19,.2);
+  transition: background .2s var(--ease-out), box-shadow .2s var(--ease-out), transform .15s var(--ease-out);
+  margin-top: 6px;
+  position: relative; overflow: hidden;
+}
+.btn-login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.btn-login:hover { background: var(--tn-red-dark); box-shadow: 0 4px 14px rgba(231,0,19,.3); transform: translateY(-1px); }
+.btn-login:active { transform: translateY(0); }
+.btn-login .lbl-icon { font-size: 16px; }
+
+/* Spinner */
+.btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: none;
+}
+.btn-login.loading .btn-spinner { display: block; }
+.btn-login.loading .btn-text-wrap { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.login-err {
+  display: none;
+  background: var(--bad-soft);
+  border: 1px solid rgba(185,28,28,.25);
+  border-radius: var(--r);
+  padding: 9px 12px;
+  font-size: 12px; color: var(--bad);
+  align-items: center; gap: 8px;
+  margin-top: 8px;
+  animation: shakeX .4s var(--ease-in-out);
+  font-weight: 500;
+}
+.login-err.show { display: flex; }
+@keyframes shakeX { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+/* Security note */
+.security-note {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-size: 11px; color: var(--text-3);
+  margin-top: 14px;
+}
+.security-note .sn-icon { font-size: 14px; color: var(--ok); }
+
+.divider { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.divider span { font-size: 11px; color: var(--text-4); white-space: nowrap; }
+
+/* Hidden util */
+.hidden { display: none !important; }
+
+/* ══════════════════════════════════════════════
+   APP LAYOUT (post-login)
+══════════════════════════════════════════════ */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  z-index: 2;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 248px;
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--tn-red) 0%, var(--tn-red) 50%, #ffffff 50%, #ffffff 100%);
+  z-index: 1;
+}
+.sidebar-header {
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-3);
+}
+.logo-icon {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--tn-red) 0%, #C8102E 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(231,0,19,.25);
+  letter-spacing: .5px;
+}
+.logo-text { font-weight: 700; font-size: 16px; color: var(--text); line-height: 1.2; }
+.logo-text small { display: block; font-size: 10px; font-weight: 500; color: var(--text-3); font-family: var(--arabic); direction: rtl; margin-top: 2px; }
+
+/* Role badge in sidebar */
+.sidebar-role-badge {
+  margin: 12px 14px 0;
+  padding: 8px 12px;
+  border-radius: var(--r);
+  font-size: 11px; font-weight: 600;
+  display: flex; align-items: center; gap: 7px;
+  border: 1px solid transparent;
+}
+.srb-admin     { background: var(--tn-red-soft); color: var(--tn-red-dark); border-color: rgba(231,0,19,.15); }
+.srb-directeur { background: var(--info-soft);   color: var(--info);       border-color: rgba(29,78,216,.15); }
+.srb-inspecteur{ background: var(--ok-soft);     color: var(--ok);         border-color: rgba(4,120,87,.15); }
+.srb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; animation: pulse-dot 2.4s var(--ease-in-out) infinite; }
+.srb-admin .srb-dot     { background: var(--tn-red); }
+.srb-directeur .srb-dot { background: var(--info); }
+.srb-inspecteur .srb-dot{ background: var(--ok); }
+
+.sidebar-section-label {
+  padding: 16px 20px 6px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-4); font-family: var(--mono);
+}
+.nav-group { width: 100%; margin-top: 4px; padding: 0 10px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; cursor: pointer;
+  position: relative;
+  transition: background .2s var(--ease-out), color .2s var(--ease-out);
+  border-radius: var(--r2);
+  color: var(--text-2); font-size: 13.5px; font-weight: 500;
+  margin-bottom: 2px;
+}
+.nav-item::before {
+  content: ''; position: absolute; left: 0; top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px; height: 18px;
+  background: var(--tn-red);
+  border-radius: 0 2px 2px 0;
+  transition: transform .25s var(--ease-out);
+}
+.nav-item:hover { background: var(--bg-3); color: var(--text); }
+.nav-item.active { background: var(--tn-red-soft); color: var(--tn-red-dark); font-weight: 600; }
+.nav-item.active::before { transform: translateY(-50%) scaleY(1); }
+.nav-item.active .nav-ico { color: var(--tn-red); }
+.nav-item:hover .nav-ico { color: var(--tn-red); }
+.nav-ico { width: 18px; height: 18px; color: var(--text-3); flex-shrink: 0; transition: color .2s var(--ease-out); }
+.nav-label { font-size: 13.5px; font-weight: inherit; color: inherit; white-space: nowrap; flex: 1; }
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 14px 16px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-3);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.api-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: var(--r);
+  font-size: 11px; font-weight: 500;
+  white-space: nowrap; border: 1px solid var(--border);
+  background: #fff;
+}
+.api-pill.ok  { color: var(--ok);  background: var(--ok-soft);  border-color: rgba(4,120,87,.2); }
+.api-pill.err { color: var(--bad); background: var(--bad-soft); border-color: rgba(185,28,28,.2); }
+.api-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; animation: pulse-dot 2.4s var(--ease-in-out) infinite; }
+.api-pill.ok .api-dot  { background: var(--ok); }
+.api-pill.err .api-dot { background: var(--bad); }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.api-text { font-family: var(--mono); font-size: 10.5px; }
+
+/* Logout button */
+.btn-logout {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 12px;
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--r); cursor: pointer;
+  font-size: 12px; font-weight: 500; color: var(--text-3);
+  font-family: var(--sans);
+  transition: background .2s var(--ease-out), color .2s var(--ease-out), border-color .2s var(--ease-out);
+}
+.btn-logout:hover { background: var(--bad-soft); color: var(--bad); border-color: rgba(185,28,28,.25); }
+.btn-logout svg { width: 14px; height: 14px; }
+
+/* MAIN */
+.main { flex: 1; margin-left: 248px; padding: 0; min-height: 100vh; display: flex; flex-direction: column; }
+.topbar {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-flag {
+  display: flex; align-items: center; gap: 10px;
+  padding-right: 16px; border-right: 1px solid var(--border);
+}
+.topbar-flag-emoji {
+  width: 28px; height: 18px; border-radius: 2px;
+  background: var(--tn-red); position: relative; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+}
+.topbar-flag-emoji::before { content:'☪'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; line-height:1; }
+.topbar-flag-text { font-size: 11px; font-weight: 600; color: var(--text-2); letter-spacing: .3px; }
+.topbar-flag-text small { display:block; font-size:9px; color:var(--text-3); font-weight:500; font-family:var(--arabic); direction:rtl; letter-spacing:0; }
+.breadcrumb { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 8px; }
+.breadcrumb-sep { color: var(--text-4); }
+.breadcrumb-current { color: var(--text); font-weight: 500; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-search { position: relative; display: flex; align-items: center; }
+.topbar-search input {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 7px 12px 7px 32px;
+  font-size: 12px; color: var(--text); width: 220px;
+  font-family: var(--sans);
+  transition: border-color .2s var(--ease-out), box-shadow .2s var(--ease-out), background .2s var(--ease-out);
+}
+.topbar-search input:focus { outline:none; background:#fff; border-color:var(--tn-red); box-shadow:0 0 0 3px rgba(231,0,19,.08); }
+.topbar-search-icon { position:absolute; left:10px; width:14px; height:14px; color:var(--text-3); pointer-events:none; }
+.topbar-icon-btn {
+  width:34px; height:34px; border-radius:var(--r);
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border:1px solid var(--border); color:var(--text-2);
+  cursor:pointer;
+  transition: background .2s var(--ease-out), border-color .2s var(--ease-out), color .2s var(--ease-out);
+  position: relative;
+}
+.topbar-icon-btn:hover { background:var(--tn-red-soft); border-color:rgba(231,0,19,.3); color:var(--tn-red); }
+.topbar-icon-btn .notif-dot { position:absolute; top:7px; right:7px; width:6px; height:6px; background:var(--tn-red); border-radius:50%; border:2px solid #fff; }
+.topbar-user {
+  display:flex; align-items:center; gap:10px;
+  padding:5px 12px 5px 5px;
+  border:1px solid var(--border); border-radius:30px;
+  background:#fff; cursor:pointer;
+  transition: border-color .2s var(--ease-out);
+}
+.topbar-user:hover { border-color: var(--tn-red); }
+.topbar-avatar {
+  width:28px; height:28px; border-radius:50%;
+  background: linear-gradient(135deg, var(--tn-red), #C8102E);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; font-family:var(--sans);
+}
+.topbar-user-name { font-size:12px; font-weight:500; color:var(--text); line-height:1.1; }
+.topbar-user-name small { display:block; font-size:9.5px; color:var(--text-3); font-weight:400; }
+
+.page-content { flex: 1; padding: 24px 32px 32px; }
+.page { display: none; }
+.page.active { display: block; animation: pageIn .4s var(--ease-out) both; }
+@keyframes pageIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.page-header {
+  margin-bottom: 20px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.page-header::after {
+  content: ''; position: absolute; bottom: -1px; left: 0;
+  width: 64px; height: 2px; background: var(--tn-red); border-radius: 1px;
+}
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; letter-spacing: -.01em; }
+.page-sub { font-size: 12.5px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
+.page-date {
+  font-family: var(--mono); font-size: 11px; color: var(--text-2);
+  background: #fff; border: 1px solid var(--border);
+  padding: 7px 13px; border-radius: var(--r); font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.page-date::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--tn-red); }
+
+/* CARD */
+.card {
+  background: #ffffff; border: 1px solid var(--border);
+  border-radius: var(--r3); padding: 20px;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color .25s var(--ease-out), box-shadow .25s var(--ease-out), transform .25s var(--ease-out);
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(231,0,19,.15), transparent);
+  opacity:0; transition: opacity .3s var(--ease-out);
+}
+.card:hover { border-color:var(--ink-7); box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.card:hover::before { opacity:1; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--ink-8); }
+.card-label { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
+.card-label::before { content:''; width:3px; height:14px; background:var(--tn-red); border-radius:2px; }
+
+/* KPI STRIP */
+.kpi-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; perspective:1200px; }
+.kpi-cube {
+  position:relative; height:150px;
+  transform-style:preserve-3d;
+  transition:transform .6s var(--ease-out);
+  cursor:default;
+  animation:cubeEntry .7s var(--ease-spring) both;
+}
+.kpi-cube:nth-child(1){animation-delay:.05s}
+.kpi-cube:nth-child(2){animation-delay:.12s}
+.kpi-cube:nth-child(3){animation-delay:.19s}
+.kpi-cube:nth-child(4){animation-delay:.26s}
+@keyframes cubeEntry { from{opacity:0;transform:translateY(20px) rotateX(-15deg) scale(.9)} to{opacity:1;transform:translateY(0) rotateX(0) scale(1)} }
+.kpi-cube-face {
+  position:absolute; inset:0;
+  background:#ffffff; border:1px solid var(--border); border-radius:var(--r3);
+  padding:16px 18px; display:flex; flex-direction:column; justify-content:space-between;
+  backface-visibility:hidden; transform:translateZ(20px);
+  box-shadow:var(--shadow-sm);
+  transition: border-color .3s var(--ease-out), box-shadow .3s var(--ease-out);
+}
+.kpi-cube:hover .kpi-cube-face {
+  border-color:var(--accent-color, var(--tn-red));
+  box-shadow: 0 0 0 1px var(--accent-color, var(--tn-red)), 0 12px 28px -8px color-mix(in srgb, var(--accent-color, var(--tn-red)) 35%, transparent);
+}
+.kpi-cube-back {
+  position:absolute; inset:0;
+  border-radius:var(--r3); padding:14px 18px;
+  display:flex; flex-direction:column; justify-content:space-between;
+  backface-visibility:hidden;
+  transform:translateZ(-1px) rotateY(180deg) translateZ(20px);
+  color:#fff; box-shadow:var(--shadow-3d);
+}
+.kpi-cube-back::before { content:''; position:absolute; inset:0; border-radius:var(--r3); background:radial-gradient(circle at 80% 20%, rgba(255,255,255,.15) 0%, transparent 50%); pointer-events:none; }
+.kpi-cube-back-label { font-size:9.5px; letter-spacing:1.2px; text-transform:uppercase; color:rgba(255,255,255,.85); font-weight:600; display:flex; align-items:center; gap:6px; }
+.kpi-cube-back-label::before { content:''; width:4px; height:4px; background:rgba(255,255,255,.9); border-radius:50%; animation:pulse-dot 2s var(--ease-in-out) infinite; }
+.kpi-cube-back-value { font-size:24px; font-weight:800; line-height:1; letter-spacing:-.02em; }
+.kpi-cube-back-value small { font-size:12px; font-weight:500; opacity:.85; margin-left:2px; }
+.kpi-cube-back-spark { height:36px; position:relative; margin:0 -4px; }
+.kpi-cube-back-spark canvas { width:100% !important; height:100% !important; }
+.kpi-cube-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.kpi-cube-icon {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--accent-bg, var(--tn-red-soft));
+  color:var(--accent-color, var(--tn-red));
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; transform:translateZ(8px);
+  transition:transform .4s var(--ease-spring);
+}
+.kpi-cube:hover .kpi-cube-icon { transform:translateZ(20px) rotate(-8deg) scale(1.1); box-shadow:0 6px 12px -2px color-mix(in srgb, var(--accent-color, var(--tn-red)) 30%, transparent); }
+.kpi-cube-label { font-size:10px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); font-weight:600; flex:1; text-align:right; line-height:1.2; }
+.kpi-cube-value { font-size:32px; font-weight:800; color:var(--text); line-height:1; letter-spacing:-.03em; transform:translateZ(10px); display:flex; align-items:baseline; gap:4px; }
+.kpi-cube-value-num { background:linear-gradient(135deg, var(--text) 0%, var(--accent-color, var(--tn-red)) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.kpi-cube-unit { font-size:14px; color:var(--text-3); font-weight:500; -webkit-text-fill-color:var(--text-3); }
+.kpi-cube-delta { font-size:10.5px; display:flex; align-items:center; gap:5px; color:var(--text-3); transform:translateZ(6px); }
+.delta-badge { padding:2px 7px; border-radius:4px; font-family:var(--mono); font-size:9.5px; font-weight:700; display:inline-flex; align-items:center; gap:2px; }
+.badge-up   { background:var(--ok-soft);  color:var(--ok); }
+.badge-down { background:var(--bad-soft); color:var(--bad); }
+.badge-flat { background:var(--ink-7);    color:var(--text-2); }
+.kpi-cube::after { content:''; position:absolute; right:-8px; top:30%; width:4px; height:40%; background:var(--accent-color, var(--tn-red)); border-radius:2px; opacity:.25; transform:rotateY(90deg) translateZ(-2px); transition:opacity .3s, height .3s; }
+.kpi-cube:hover::after { opacity:.6; height:50%; }
+
+/* GRIDS */
+.dash-grid { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:14px; }
+.dash-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+.chart-wrap { position:relative; height:220px; }
+.chart-wrap-sm { position:relative; height:160px; }
+.chart-wrap-lg { position:relative; height:300px; }
+
+/* SCORE CARD */
+.score-3d-wrap { height:220px; display:flex; align-items:center; justify-content:center; }
+.score-3d-inner { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+.score-face {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#ffffff 0%,var(--tn-red-soft) 100%);
+  border:1px solid var(--border); border-radius:var(--r3);
+  box-shadow:var(--shadow-sm); overflow:hidden;
+  transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
+}
+.score-face::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--tn-red); }
+.score-face::after { content:''; position:absolute; bottom:-30%; right:-30%; width:100px; height:100px; background:radial-gradient(circle,rgba(231,0,19,.08) 0%,transparent 70%); pointer-events:none; transition:transform .6s var(--ease-out); }
+.score-face:hover { box-shadow:var(--shadow-md); border-color:rgba(231,0,19,.3); }
+.score-face:hover::after { transform:scale(1.4); }
+.score-big { font-size:52px; font-weight:800; color:var(--tn-red); line-height:1; letter-spacing:-.03em; animation:numberReveal .8s var(--ease-out) both; }
+@keyframes numberReveal { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
+.score-label { font-size:11px; color:var(--text-2); letter-spacing:1.5px; text-transform:uppercase; margin-top:8px; font-weight:600; }
+
+/* RINGS */
+.rings-row { display:flex; justify-content:space-around; align-items:center; padding:8px 0; }
+.ring-wrap { text-align:center; transition:transform .25s var(--ease-out); }
+.ring-wrap:hover { transform:translateY(-2px); }
+.ring-svg { transform:rotate(-90deg); }
+.ring-track { fill:none; stroke:var(--ink-7); }
+.ring-fill { fill:none; stroke-linecap:round; transition:stroke-dashoffset 1.2s var(--ease-out); }
+.ring-val { font-weight:700; font-size:14px; color:var(--text); margin-top:4px; }
+.ring-name { font-size:10px; color:var(--text-3); margin-top:1px; letter-spacing:.3px; text-transform:uppercase; font-weight:600; }
+
+/* TABLE */
+.data-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.data-table th { text-align:left; padding:9px 12px; font-size:10px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3); font-weight:600; border-bottom:1.5px solid var(--border); background:var(--bg-3); }
+.data-table td { padding:10px 12px; border-bottom:1px solid var(--ink-8); color:var(--text-2); transition:background .15s var(--ease-out); }
+.data-table tr { transition:background .15s var(--ease-out); }
+.data-table tr:hover td { background:var(--bg-3); }
+.data-table tr:last-child td { border:none; }
+.data-table td.num { text-align:right; font-family:var(--mono); font-size:12px; color:var(--text); font-weight:500; }
+.trend-up  { color:var(--ok);  font-weight:600; }
+.trend-down{ color:var(--bad); font-weight:600; }
+.trend-flat{ color:var(--text-3); }
+
+/* GAUGES */
+.gauge-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.gauge-label { font-size:11.5px; color:var(--text-2); width:130px; flex-shrink:0; font-weight:500; }
+.gauge-bar { flex:1; height:5px; background:var(--ink-7); border-radius:3px; overflow:hidden; }
+.gauge-fill-bar { height:100%; border-radius:3px; transition:width 1.1s var(--ease-out); }
+.gauge-val { font-family:var(--mono); font-size:11px; color:var(--text-2); width:40px; text-align:right; font-weight:500; }
+
+/* PREDICTION */
+.pred-grid { display:grid; grid-template-columns:3fr 2fr; gap:14px; }
+.pred-left { display:flex; flex-direction:column; gap:14px; }
+.pred-right { display:flex; flex-direction:column; gap:14px; }
+.kpi-input-group { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+.kpi-field { display:flex; flex-direction:column; gap:4px; }
+.kpi-field label { font-size:9.5px; color:var(--text-3); letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; text-transform:uppercase; }
+.kpi-field input { background:#fff; border:1px solid var(--border); border-radius:var(--r); padding:8px 10px; font-size:12.5px; font-family:var(--mono); color:var(--text); width:100%; transition:border-color .2s var(--ease-out), background .2s var(--ease-out), box-shadow .2s var(--ease-out); }
+.kpi-field input:focus { outline:none; border-color:var(--tn-red); background:#fff; box-shadow:0 0 0 3px rgba(231,0,19,.08); }
+.kpi-field input.prefilled { border-color:rgba(231,0,19,.3); background:var(--tn-red-soft); color:var(--tn-red-dark); font-weight:600; }
+.kpi-field input.err-field { border-color:var(--bad); background:var(--bad-soft); }
+/* Champs verrouillés : données historiques constantes (2023, 2024, 2025) */
+.kpi-field input.locked, .success-row input.locked { background:var(--bg-3); color:var(--text-2); cursor:default; box-shadow:none; }
+.kpi-field input.locked:focus, .success-row input.locked:focus { border-color:var(--border); box-shadow:none; }
+.success-row { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--bg-3); border:1px solid var(--border); border-radius:var(--r2); }
+.success-row label { font-size:12px; color:var(--text-2); flex:1; font-weight:500; }
+.success-row input { width:90px; background:transparent; border:none; border-bottom:1.5px solid var(--tn-red); padding:4px 8px; font-size:20px; font-weight:700; font-family:var(--sans); color:var(--tn-red); text-align:right; }
+.success-row input:focus { outline:none; }
+.success-row .unit { color:var(--text-3); font-size:14px; font-weight:500; }
+
+.result-inner { background:linear-gradient(135deg,#ffffff 0%,var(--tn-red-soft) 100%); border:1px solid rgba(231,0,19,.2); border-radius:var(--r3); padding:22px; position:relative; overflow:hidden; display:none; box-shadow:var(--shadow-sm); }
+.result-inner.show { display:block; animation:resultReveal .5s var(--ease-out) both; }
+@keyframes resultReveal { from{opacity:0;transform:translateY(8px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+.result-inner::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--tn-red); }
+.result-score-big { font-size:56px; font-weight:800; line-height:1; color:var(--tn-red); letter-spacing:-.03em; }
+.result-score-unit { font-size:28px; color:var(--text-3); font-weight:500; }
+.gauge-arc-svg { width:100%; height:70px; }
+.compare-chips { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:12px; }
+.compare-chip { background:#fff; border:1px solid var(--border); border-radius:var(--r2); padding:11px; text-align:center; transition:border-color .2s var(--ease-out), transform .2s var(--ease-out); }
+.compare-chip:hover { border-color:var(--ink-6); transform:translateY(-1px); }
+.compare-chip.highlight { background:var(--tn-red-soft); border-color:rgba(231,0,19,.3); }
+.chip-yr { font-size:10px; color:var(--text-3); margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+.chip-val { font-size:17px; font-weight:700; color:var(--text); }
+.compare-chip.highlight .chip-yr { color:var(--tn-red); }
+.compare-chip.highlight .chip-val { color:var(--tn-red); }
+.chip-d { font-size:10.5px; margin-top:3px; }
+.interp-card { background:#fff; border:1px solid var(--border); border-left:3px solid var(--tn-red); border-radius:0 var(--r2) var(--r2) 0; padding:12px 14px; font-size:12.5px; color:var(--text-2); line-height:1.65; margin-top:12px; }
+.interp-card strong { color:var(--text); font-weight:600; }
+
+.predict-btn { width:100%; padding:13px; background:var(--tn-red); border:none; border-radius:var(--r2); color:#fff; font-family:var(--sans); font-size:13.5px; font-weight:600; letter-spacing:.2px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 2px 8px rgba(231,0,19,.2); transition:background .2s var(--ease-out), box-shadow .2s var(--ease-out), transform .2s var(--ease-out); position:relative; overflow:hidden; }
+.predict-btn:hover { background:var(--tn-red-dark); box-shadow:0 4px 12px rgba(231,0,19,.3); transform:translateY(-1px); }
+.predict-btn:active { transform:translateY(0); }
+.predict-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
+.predict-btn.loading .btn-spinner { display:block; }
+.predict-btn.loading .btn-text { display:none; }
+
+.err-bar { display:none; background:var(--bad-soft); border:1px solid rgba(185,28,28,.3); border-radius:var(--r2); padding:10px 14px; font-size:12.5px; color:var(--bad); margin-top:10px; align-items:center; gap:8px; font-weight:500; animation:shakeX .4s var(--ease-in-out); }
+.err-bar.show { display:flex; }
+
+/* TIMELINE */
+.timeline-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--ink-8); transition:background .2s var(--ease-out); }
+.timeline-item:hover { background:var(--bg-3); padding-left:6px; padding-right:6px; border-radius:var(--r); }
+.timeline-item:last-child { border:none; }
+.timeline-year { font-weight:700; font-size:14px; color:var(--tn-red); width:46px; flex-shrink:0; margin-top:2px; padding:3px 6px; background:var(--tn-red-soft); border-radius:var(--r); text-align:center; }
+.timeline-content { flex:1; }
+.timeline-title { font-weight:600; color:var(--text); font-size:13px; }
+.timeline-stats { display:flex; gap:14px; margin-top:5px; flex-wrap:wrap; }
+.timeline-stat { font-family:var(--mono); font-size:10.5px; color:var(--text-3); }
+.timeline-stat span { color:var(--text); font-weight:500; }
+
+/* LEXIQUE */
+.lex-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.lex-card { background:#fff; border:1px solid var(--border); border-radius:var(--r3); padding:16px; transition:border-color .25s var(--ease-out), box-shadow .25s var(--ease-out), transform .25s var(--ease-out); cursor:default; position:relative; overflow:hidden; box-shadow:var(--shadow-sm); }
+.lex-card::before { content:''; position:absolute; top:0; right:0; width:80px; height:80px; background:radial-gradient(circle,var(--lx-color,var(--tn-red)) 0%,transparent 70%); opacity:.06; pointer-events:none; }
+.lex-card::after { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--lx-color,var(--tn-red)); opacity:0; transition:opacity .25s var(--ease-out); }
+.lex-card:hover { border-color:var(--ink-7); box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.lex-card:hover::after { opacity:1; }
+.lex-abbr { font-family:var(--mono); font-size:10px; color:var(--lx-color,var(--tn-red)); letter-spacing:.5px; margin-bottom:5px; font-weight:600; text-transform:uppercase; }
+.lex-name { font-weight:600; font-size:13px; color:var(--text); margin-bottom:8px; }
+.lex-formula { font-family:var(--mono); font-size:10.5px; color:var(--text-2); background:var(--bg-3); padding:7px 9px; border-radius:var(--r); line-height:1.5; border-left:2px solid var(--lx-color,var(--tn-red)); }
+.lex-unit { font-size:10.5px; color:var(--text-3); margin-top:7px; }
+.lex-direction { display:inline-flex; align-items:center; gap:4px; margin-top:7px; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:.3px; }
+.dir-pos { background:var(--ok-soft);  color:var(--ok); }
+.dir-neg { background:var(--bad-soft); color:var(--bad); }
+.dir-neu { background:var(--ink-7);    color:var(--text-2); }
+
+/* BADGES */
+.badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:.3px; text-transform:uppercase; }
+.badge-neon   { background:var(--tn-red-soft); color:var(--tn-red);  border:1px solid rgba(231,0,19,.2); }
+.badge-violet { background:var(--info-soft);   color:var(--info);    border:1px solid rgba(29,78,216,.2); }
+.badge-green  { background:var(--ok-soft);     color:var(--ok);      border:1px solid rgba(4,120,87,.2); }
+.badge-amber  { background:var(--warn-soft);   color:var(--warn);    border:1px solid rgba(180,83,9,.2); }
+.badge-red    { background:var(--bad-soft);    color:var(--bad);     border:1px solid rgba(185,28,28,.2); }
+
+/* TOOLTIP */
+[data-tip] { position:relative; }
+[data-tip]:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; font-size:11px; font-family:var(--mono); padding:6px 10px; border-radius:var(--r); white-space:nowrap; pointer-events:none; z-index:1000; box-shadow:var(--shadow-lg); }
+
+/* ══════════════════════════════════════════════
+   ETABLISSEMENTS PAGE
+══════════════════════════════════════════════ */
+.etab-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.etab-search-wrap { position: relative; flex: 1; min-width: 200px; }
+.etab-search-wrap input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 8px 12px 8px 32px;
+  font-size: 13px; color: var(--text); font-family: var(--sans);
+  transition: border-color .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.etab-search-wrap input:focus {
+  outline: none; background: #fff;
+  border-color: var(--tn-red); box-shadow: 0 0 0 3px rgba(231,0,19,.08);
+}
+.etab-search-icon {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: var(--text-3); pointer-events: none;
+}
+
+.btn-primary {
+  padding: 9px 16px; background: var(--tn-red); border: none;
+  border-radius: var(--r2); color: #fff; font-family: var(--sans);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  box-shadow: 0 2px 8px rgba(231,0,19,.2);
+  transition: background .2s var(--ease-out), box-shadow .2s var(--ease-out), transform .15s var(--ease-out);
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--tn-red-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(231,0,19,.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  padding: 9px 14px; background: #fff; border: 1px solid var(--border);
+  border-radius: var(--r2); color: var(--text-2); font-family: var(--sans);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  transition: background .2s var(--ease-out), border-color .2s var(--ease-out);
+}
+.btn-secondary:hover { background: var(--bg); border-color: var(--ink-5); }
+
+/* Modal overlay */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15,23,42,.45); backdrop-filter: blur(3px);
+  align-items: center; justify-content: center; padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; border-radius: var(--r4); width: 100%; max-width: 680px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(15,23,42,.18);
+  animation: modalIn .3s var(--ease-out) both;
+}
+@keyframes modalIn { from{opacity:0;transform:scale(.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.modal-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; background: #fff; z-index: 1;
+}
+.modal-title { font-size: 17px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 9px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: var(--r);
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text-3); cursor: pointer; font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+}
+.modal-close:hover { background: var(--bad-soft); color: var(--bad); }
+.modal-body { padding: 20px 24px; }
+.modal-footer {
+  padding: 14px 24px 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  position: sticky; bottom: 0; background: #fff;
+}
+
+/* Form inside modal */
+.mform-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.mform-row-full { margin-bottom: 14px; }
+.mform-group { display: flex; flex-direction: column; gap: 5px; }
+.mform-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; }
+.mform-input {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 9px 12px; font-size: 13px; font-family: var(--mono); color: var(--text); width: 100%;
+  transition: border-color .2s var(--ease-out), background .2s, box-shadow .2s;
+}
+.mform-input:focus { outline: none; background: #fff; border-color: var(--tn-red); box-shadow: 0 0 0 3px rgba(231,0,19,.08); }
+.mform-section { font-size: 11px; font-weight: 700; color: var(--tn-red); text-transform: uppercase; letter-spacing: .8px; margin: 16px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--tn-red-soft); display: flex; align-items: center; gap: 7px; }
+.mform-hint { font-size: 10.5px; color: var(--text-3); margin-top: 3px; }
+.mform-err { display: none; color: var(--bad); font-size: 12px; background: var(--bad-soft); border: 1px solid rgba(185,28,28,.2); border-radius: var(--r); padding: 8px 12px; margin-bottom: 10px; font-weight: 500; }
+.mform-err.show { display: block; }
+
+/* KPI grid in modal */
+.kpi-modal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 640px) { .kpi-modal-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Results table */
+.etab-table-wrap { overflow-x: auto; }
+.etab-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.etab-table th {
+  text-align: left; padding: 9px 12px;
+  font-size: 10px; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--text-3); font-weight: 600; border-bottom: 1.5px solid var(--border);
+  background: var(--bg-3); white-space: nowrap;
+}
+.etab-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--ink-8);
+  color: var(--text-2); transition: background .15s;
+}
+.etab-table tr:hover td { background: var(--bg-3); }
+.etab-table tr:last-child td { border: none; }
+.etab-table .num { text-align: right; font-family: var(--mono); font-size: 12px; color: var(--text); font-weight: 500; }
+.etab-table .etab-name { font-weight: 600; color: var(--text); }
+.etab-table .etab-id { font-family: var(--mono); font-size: 11px; color: var(--tn-red); background: var(--tn-red-soft); padding: 2px 7px; border-radius: 4px; display: inline-block; }
+.etab-pred-pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  border-radius: 20px; font-size: 11px; font-weight: 700; font-family: var(--mono);
+}
+.pred-excellent { background: var(--ok-soft);   color: var(--ok); }
+.pred-satisfait { background: var(--tn-red-soft); color: var(--tn-red); }
+.pred-vigilance { background: var(--warn-soft);  color: var(--warn); }
+.pred-critique  { background: var(--bad-soft);   color: var(--bad); }
+.etab-action-btn {
+  padding: 4px 9px; border-radius: var(--r); border: 1px solid var(--border);
+  background: #fff; color: var(--text-2); cursor: pointer; font-size: 11px;
+  font-family: var(--sans); transition: background .2s, border-color .2s;
+  margin-right: 4px;
+}
+.etab-action-btn:hover { background: var(--tn-red-soft); border-color: rgba(231,0,19,.3); color: var(--tn-red); }
+.etab-action-btn.del:hover { background: var(--bad-soft); border-color: rgba(185,28,28,.3); color: var(--bad); }
+.etab-empty { text-align: center; padding: 48px 20px; color: var(--text-3); }
+.etab-empty-icon { font-size: 40px; margin-bottom: 10px; }
+.etab-count-badge { padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--text-2); font-family: var(--mono); }
+.save-success { display: none; align-items: center; gap: 8px; padding: 9px 12px; background: var(--ok-soft); border: 1px solid rgba(4,120,87,.2); border-radius: var(--r); font-size: 12px; color: var(--ok); font-weight: 500; margin-bottom: 10px; }
+.save-success.show { display: flex; }
+
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--ink-6); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--ink-5); }
+
+/* RESPONSIVE */
+@media (max-width:1024px) {
+  .kpi-strip { grid-template-columns:repeat(2,1fr); }
+  .dash-grid,.pred-grid { grid-template-columns:1fr; }
+  .dash-grid-3 { grid-template-columns:1fr 1fr; }
+  .topbar-search { display:none; }
+  .lp-shell { grid-template-columns:1fr; }
+  .lp-left { display:none; }
+}
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); transition:transform .3s var(--ease-out); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .topbar { padding:12px 16px; }
+  .page-content { padding:16px; }
+}
+@media (max-width:640px) {
+  .kpi-strip,.dash-grid-3 { grid-template-columns:1fr; }
+  .kpi-input-group { grid-template-columns:repeat(2,1fr); }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+
+/* ══════════════════════════════════════════════
+   UI/UX POLISH LAYER  (additive — cascades last)
+   Refines spacing, typography, depth, motion and
+   responsiveness without altering structure/logic.
+══════════════════════════════════════════════ */
+
+/* — Typography refinement — */
+body { font-feature-settings: 'cv02','cv03','cv04','cv11'; letter-spacing: -0.005em; }
+.page-title, .lp-heading, .modal-title, .result-score-big, .score-big,
+.kpi-cube-value, .kpi-cube-back-value { font-feature-settings: 'ss01'; }
+.data-table td.num, .etab-table .num, .kpi-field input, .mform-input,
+.api-text, .timeline-stat, .page-date { font-variant-numeric: tabular-nums; }
+
+/* — Smoother global focus-visible accessibility ring — */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid rgba(231,0,19,.45);
+  outline-offset: 2px;
+  border-radius: var(--r);
+}
+button:focus:not(:focus-visible), input:focus:not(:focus-visible) { outline: none; }
+
+/* — Buttons: refined press + sheen polish — */
+.btn-login, .predict-btn, .btn-primary {
+  transition: background .2s var(--ease-out), box-shadow .25s var(--ease-out),
+              transform .12s var(--ease-out), filter .2s var(--ease-out);
+  will-change: transform;
+}
+.btn-login:active, .predict-btn:active, .btn-primary:active { transform: translateY(0) scale(.985); }
+.btn-secondary:active, .etab-action-btn:active, .modal-close:active,
+.topbar-icon-btn:active, .role-tab:active { transform: scale(.96); }
+.btn-secondary { transition: background .2s var(--ease-out), border-color .2s var(--ease-out),
+                 box-shadow .2s var(--ease-out), transform .12s var(--ease-out); }
+.btn-secondary:hover { box-shadow: var(--shadow-sm); }
+
+/* — Inputs: gentler, more premium focus state — */
+.form-input, .kpi-field input, .mform-input,
+.topbar-search input, .etab-search-wrap input, .success-row input, select.form-input {
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out),
+              box-shadow .22s var(--ease-out);
+}
+.form-input:hover:not(:focus), .kpi-field input:hover:not(:focus),
+.mform-input:hover:not(:focus), .etab-search-wrap input:hover:not(:focus),
+.topbar-search input:hover:not(:focus) { border-color: var(--border-2); }
+
+/* — Nav items: subtle slide affordance — */
+.nav-item { transition: background .2s var(--ease-out), color .2s var(--ease-out),
+            padding-left .2s var(--ease-out); }
+.nav-item:hover:not(.active) { padding-left: 15px; }
+.nav-ico { transition: color .2s var(--ease-out), transform .25s var(--ease-spring); }
+.nav-item:hover .nav-ico { transform: scale(1.12); }
+
+/* — Icon button & topbar user lift — */
+.topbar-icon-btn, .topbar-user { transition: background .2s var(--ease-out),
+  border-color .2s var(--ease-out), color .2s var(--ease-out),
+  box-shadow .2s var(--ease-out), transform .15s var(--ease-out); }
+.topbar-icon-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.topbar-user:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.topbar-avatar { box-shadow: 0 2px 6px rgba(231,0,19,.28); }
+
+/* — Cards: cleaner hover elevation — */
+.card { transition: border-color .25s var(--ease-out), box-shadow .3s var(--ease-out),
+        transform .3s var(--ease-out); }
+.card:hover { transform: translateY(-3px); }
+
+/* — Badges: tiny depth — */
+.badge { box-shadow: var(--shadow-sm); }
+
+/* — Table rows: smoother hover, faint zebra — */
+.data-table tbody tr:nth-child(even) td,
+.etab-table tbody tr:nth-child(even) td { background: rgba(15,23,42,.012); }
+.data-table tr:hover td, .etab-table tr:hover td { background: var(--tn-red-soft) !important; }
+.etab-id, .timeline-year { transition: transform .2s var(--ease-out); }
+.etab-table tr:hover .etab-id { transform: translateY(-1px); }
+
+/* — Pred result chips lift — */
+.compare-chip { transition: border-color .2s var(--ease-out), transform .2s var(--ease-out),
+                box-shadow .2s var(--ease-out); }
+.compare-chip:hover { box-shadow: var(--shadow-sm); }
+
+/* — Role pills / tabs micro-interaction — */
+.lp-role-pill { transition: background .2s var(--ease-out), border-color .2s var(--ease-out),
+                transform .18s var(--ease-out); }
+.lp-role-pill:hover { transform: translateX(3px); }
+.role-tab { transition: background .2s var(--ease-out), color .2s var(--ease-out),
+            box-shadow .2s var(--ease-out), transform .15s var(--ease-out); }
+.role-tab .rt-icon { transition: transform .25s var(--ease-spring); }
+.role-tab:hover .rt-icon { transform: scale(1.12) translateY(-1px); }
+
+/* — Modal: richer backdrop — */
+.modal-overlay { backdrop-filter: blur(5px) saturate(115%); -webkit-backdrop-filter: blur(5px) saturate(115%);
+  background: rgba(15,23,42,.5); transition: opacity .2s var(--ease-out); }
+
+/* — Logo icon gentle breathing on hover — */
+.logo-icon, .lp-logo-icon { transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-out); }
+.sidebar-header:hover .logo-icon { transform: rotate(-4deg) scale(1.05); }
+
+/* — Refined scrollbar (kept subtle) — */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { border: 2px solid var(--bg); background-clip: padding-box; }
+* { scrollbar-width: thin; scrollbar-color: var(--ink-6) transparent; }
+
+/* — Staggered entrance for dynamically built grids — */
+@keyframes polishFadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+.lex-card { animation: polishFadeUp .5s var(--ease-out) both; }
+.lex-grid .lex-card:nth-child(1){animation-delay:.02s}
+.lex-grid .lex-card:nth-child(2){animation-delay:.06s}
+.lex-grid .lex-card:nth-child(3){animation-delay:.10s}
+.lex-grid .lex-card:nth-child(4){animation-delay:.14s}
+.lex-grid .lex-card:nth-child(5){animation-delay:.18s}
+.lex-grid .lex-card:nth-child(6){animation-delay:.22s}
+.lex-grid .lex-card:nth-child(7){animation-delay:.26s}
+.lex-grid .lex-card:nth-child(8){animation-delay:.30s}
+.timeline-item { animation: polishFadeUp .45s var(--ease-out) both; }
+.ring-wrap { animation: polishFadeUp .5s var(--ease-out) both; }
+
+/* — Page transition slightly richer — */
+.page.active { animation: pageInPolish .42s var(--ease-out) both; }
+@keyframes pageInPolish { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* — KPI cube face inner gloss already exists; soften shadow on rest state — */
+.kpi-cube-face { box-shadow: var(--shadow); }
+
+/* — Score card: contained 3D wireframe orb behind the number — */
+.score-orb-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .9;
+  -webkit-mask-image: radial-gradient(circle at 50% 46%, #000 38%, transparent 72%);
+          mask-image: radial-gradient(circle at 50% 46%, #000 38%, transparent 72%);
+  transition: opacity .4s var(--ease-out), transform .6s var(--ease-out);
+}
+.score-face .score-big,
+.score-face .score-label { position: relative; z-index: 1; }
+.score-face:hover .score-orb-canvas { opacity: 1; transform: scale(1.05); }
+
+/* ── Enhanced responsiveness ── */
+@media (max-width: 1180px) {
+  .page-content { padding: 22px 24px 28px; }
+}
+@media (max-width: 1024px) {
+  .topbar { padding: 13px 22px; }
+  .page-title { font-size: 20px; }
+  .kpi-strip { gap: 12px; }
+}
+@media (max-width: 768px) {
+  .page-header { flex-direction: column; gap: 12px; }
+  .page-date { align-self: flex-start; }
+  .etab-toolbar { gap: 8px; }
+  .etab-search-wrap { min-width: 100%; order: -1; }
+  .lp-shell { max-width: 440px; }
+  .lp-right { padding: 2rem 1.5rem; }
+  .modal-box { max-width: 100%; }
+}
+@media (max-width: 640px) {
+  .page-content { padding: 14px; }
+  .page-title { font-size: 18px; }
+  .topbar-user-name { display: none; }
+  .topbar-flag-text { display: none; }
+  .kpi-input-group { grid-template-columns: repeat(2,1fr); }
+  .mform-row { grid-template-columns: 1fr; }
+  .compare-chips { grid-template-columns: 1fr; }
+  .lex-grid { grid-template-columns: 1fr; }
+  .score-big { font-size: 44px; }
+  .result-score-big { font-size: 46px; }
+}
+@media (max-width: 420px) {
+  .role-tab { font-size: 10.5px; padding: 8px 4px; }
+  .role-tab .rt-icon { font-size: 17px; }
+  .kpi-input-group { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════
+   MOTION LAYER 2 — appear / hover / feedback
+   (présentation uniquement — aucune logique modifiée)
+══════════════════════════════════════════════ */
+
+/* — Staggered card reveal each time a page becomes active — */
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(14px) scale(.992); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.page.active .dash-grid > .card,
+.page.active .dash-grid-3 > .card,
+.page.active .pred-grid .card,
+.page.active > .card,
+.page.active .lex-grid,
+.page.active .etab-toolbar,
+.page.active .etab-table-wrap {
+  animation: cardRise .5s var(--ease-out) both;
+}
+.page.active .dash-grid > .card:nth-child(2),
+.page.active .dash-grid-3 > .card:nth-child(2),
+.page.active .pred-grid .card:nth-child(2) { animation-delay: .07s; }
+.page.active .dash-grid-3 > .card:nth-child(3),
+.page.active .pred-grid .card:nth-child(3) { animation-delay: .14s; }
+.page.active .pred-grid .card:nth-child(4) { animation-delay: .21s; }
+.page.active .card:nth-child(n+5) { animation-delay: .24s; }
+
+/* — Charts fade in softly so they don't pop — */
+.chart-wrap canvas, .chart-wrap-sm canvas, .chart-wrap-lg canvas {
+  animation: chartFade .7s var(--ease-out) both;
+}
+@keyframes chartFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* — Chart cards: gentle lift + faint ring on hover — */
+.dash-grid .card, .dash-grid-3 .card, .pred-grid .card {
+  transition: border-color .25s var(--ease-out), box-shadow .3s var(--ease-out),
+              transform .3s var(--ease-out);
+}
+.dash-grid .card:hover, .dash-grid-3 .card:hover, .pred-grid .card:hover {
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(231,0,19,.06);
+}
+
+/* — Stat numbers / badges subtle pop on hover — */
+.kpi-cube-value, .score-big, .result-score-big { transition: transform .3s var(--ease-spring); }
+.score-face:hover .score-big { transform: scale(1.04); }
+.badge { transition: transform .18s var(--ease-out), box-shadow .2s var(--ease-out); }
+.card-header:hover .badge { transform: translateY(-1px); }
+
+/* — Timeline / gauge / ring reveal refinement — */
+.gauge-fill-bar { animation: gaugeGrow 1.1s var(--ease-out) both; }
+@keyframes gaugeGrow { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+
+/* — Success feedback: check pop + soft glow — */
+@keyframes successPop {
+  0%   { opacity: 0; transform: translateY(6px) scale(.96); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.save-success.show, .modal-success.show {
+  animation: successPop .42s var(--ease-spring) both;
+}
+.save-success.show, #modal-success.show {
+  box-shadow: 0 0 0 3px rgba(4,120,87,.08);
+}
+
+/* — Prediction result reveal already exists; add a soft pulse on the score — */
+.result-inner.show .result-score-big { animation: scorePulse 1s var(--ease-out) .2s both; }
+@keyframes scorePulse {
+  0% { opacity: 0; transform: scale(.9); }
+  55% { opacity: 1; transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+/* — Loading buttons: animated sheen sweep — */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-login.loading::after, .predict-btn.loading::after,
+.btn-primary:disabled::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.22) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: sheen 1.1s var(--ease-in-out) infinite;
+  pointer-events: none;
+}
+@keyframes sheen { to { transform: translateX(100%); } }
+
+/* — Table rows: cascade in when a list renders — */
+.etab-table tbody tr { animation: rowIn .35s var(--ease-out) both; }
+.etab-table tbody tr:nth-child(2){animation-delay:.03s}
+.etab-table tbody tr:nth-child(3){animation-delay:.06s}
+.etab-table tbody tr:nth-child(4){animation-delay:.09s}
+.etab-table tbody tr:nth-child(5){animation-delay:.12s}
+.etab-table tbody tr:nth-child(n+6){animation-delay:.15s}
+@keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* — Sidebar nav items: slide-in on first paint — */
+.nav-group .nav-item { animation: navIn .4s var(--ease-out) both; }
+.nav-group .nav-item:nth-child(1){animation-delay:.04s}
+.nav-group .nav-item:nth-child(2){animation-delay:.09s}
+.nav-group .nav-item:nth-child(3){animation-delay:.14s}
+.nav-group .nav-item:nth-child(4){animation-delay:.19s}
+.nav-group .nav-item:nth-child(5){animation-delay:.24s}
+.nav-group .nav-item:nth-child(6){animation-delay:.29s}
+@keyframes navIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+/* — Topbar gentle drop on entry — */
+.topbar { animation: topbarDrop .5s var(--ease-out) both; }
+@keyframes topbarDrop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* — Honour reduced motion for the new layer too — */
+@media (prefers-reduced-motion: reduce) {
+  .lex-card, .timeline-item, .ring-wrap, .page.active { animation: none !important; }
+  .nav-item:hover:not(.active) { padding-left: 12px; }
+  .page.active .card, .page.active .dash-grid > .card, .page.active .dash-grid-3 > .card,
+  .page.active .pred-grid .card, .chart-wrap canvas, .chart-wrap-sm canvas, .chart-wrap-lg canvas,
+  .gauge-fill-bar, .etab-table tbody tr, .nav-group .nav-item, .topbar,
+  .save-success.show, .modal-success.show, .result-inner.show .result-score-big {
+    animation: none !important;
+  }
+  .btn-login.loading::after, .predict-btn.loading::after, .btn-primary:disabled::after { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════
+   ÉTABLISSEMENTS — tableau compact & lisible
+══════════════════════════════════════════════ */
+.etab-table { font-size: 11.5px; }
+.etab-table th {
+  padding: 6px 8px;
+  font-size: 9px;
+  letter-spacing: .4px;
+  position: sticky; top: 0; z-index: 2;
+}
+.etab-table td { padding: 6px 8px; line-height: 1.3; }
+.etab-table .num { font-size: 11px; }
+.etab-table .etab-name { font-size: 11.5px; }
+.etab-table .etab-id { font-size: 10px; padding: 1px 6px; }
+.etab-table .col-idx { color: var(--text-4); font-size: 10px; font-family: var(--mono); width: 28px; }
+.etab-table .col-date { font-size: 10px; color: var(--text-3); white-space: nowrap; }
+.etab-table .col-actions { white-space: nowrap; }
+
+/* Pastille de prédiction plus discrète */
+.etab-pred-pill { padding: 2px 7px; font-size: 10px; gap: 4px; }
+
+/* Boutons d'action plus petits et nets */
+.etab-action-btn { padding: 3px 8px; font-size: 10.5px; margin-right: 3px; border-radius: 6px; }
+.etab-action-btn.del { padding: 3px 7px; }
+
+/* Indicateur lecture seule (rôles non-admin) */
+.etab-readonly {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px;
+  font-size: 10.5px; font-weight: 600;
+  color: var(--text-3); background: var(--bg-3); border: 1px solid var(--border);
+}
+
+/* Hauteur maîtrisée + défilement interne pour garder la page claire */
+.etab-table-wrap { max-height: 62vh; overflow: auto; }
+
+@media (max-width: 640px) {
+  .etab-table { font-size: 11px; }
+  .etab-table th, .etab-table td { padding: 5px 6px; }
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN — refonte visuelle premium
+   (présentation uniquement — aucun id/JS modifié)
+══════════════════════════════════════════════ */
+
+/* Fond de l'écran de connexion : dégradé doux + halo */
+#login-screen {
+  background:
+    radial-gradient(1100px 540px at 18% -10%, rgba(231,0,19,.06), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, rgba(15,23,42,.05), transparent 55%),
+    var(--bg);
+}
+
+/* Coquille : plus de profondeur, séparateur net entre panneaux */
+.lp-shell {
+  max-width: 940px;
+  border: 1px solid rgba(15,23,42,.06);
+  box-shadow:
+    0 24px 60px -24px rgba(15,23,42,.28),
+    0 8px 24px -12px rgba(15,23,42,.12);
+}
+
+/* ── Panneau gauche : dégradé riche, grain subtil ── */
+.lp-left {
+  background:
+    linear-gradient(155deg, #ff1a2e 0%, var(--tn-red) 42%, var(--tn-red-dark) 100%);
+  padding: 2.75rem 2.25rem;
+}
+.lp-left::before {
+  width: 260px; height: 260px;
+  top: -90px; right: -80px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.16), rgba(255,255,255,0) 70%);
+}
+.lp-left::after {
+  width: 200px; height: 200px;
+  bottom: -70px; left: -60px;
+  background: radial-gradient(circle, rgba(255,255,255,.08), rgba(255,255,255,0) 70%);
+}
+
+/* Logo : badge plus net, ombre interne lumineuse */
+.lp-logo-icon {
+  width: 48px; height: 48px;
+  border-radius: 13px;
+  background: linear-gradient(145deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
+  border: 1px solid rgba(255,255,255,.35);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.45), 0 6px 16px -6px rgba(0,0,0,.3);
+  font-size: 16px;
+}
+.lp-logo-text { font-size: 18px; letter-spacing: -.01em; }
+.lp-logo-text small { opacity: .82; margin-top: 2px; }
+
+.lp-tagline h2 { font-size: 22px; letter-spacing: -.015em; }
+.lp-tagline p { color: rgba(255,255,255,.82); font-size: 13px; }
+
+/* Pastilles de rôle : effet verre dépoli + flèche au survol */
+.lp-role-pill {
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: 12px;
+  padding: 12px 15px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 10px -6px rgba(0,0,0,.3);
+  transition: background .22s var(--ease-out), border-color .22s var(--ease-out),
+              transform .22s var(--ease-out), box-shadow .22s var(--ease-out);
+  position: relative;
+}
+.lp-role-pill::after {
+  content: '→';
+  position: absolute; right: 14px;
+  opacity: 0; transform: translateX(-6px);
+  font-size: 14px; color: #fff;
+  transition: opacity .22s var(--ease-out), transform .22s var(--ease-out);
+}
+.lp-role-pill:hover {
+  background: rgba(255,255,255,.20);
+  border-color: rgba(255,255,255,.45);
+  transform: translateX(4px);
+  box-shadow: 0 8px 22px -10px rgba(0,0,0,.4);
+}
+.lp-role-pill:hover .rp-desc { opacity: 0; }
+.lp-role-pill:hover::after { opacity: .9; transform: translateX(0); }
+.lp-role-pill .rp-icon {
+  width: 30px; height: 30px; border-radius: 9px;
+  background: rgba(255,255,255,.16);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+
+.lp-flag { padding-top: 16px; border-top: 1px solid rgba(255,255,255,.18); }
+.lp-flag-block { box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+
+/* ── Panneau droit ── */
+.lp-right { padding: 2.75rem 2.4rem; justify-content: center; }
+.lp-heading { font-size: 24px; letter-spacing: -.02em; }
+.lp-heading::after {
+  content: ''; display: block; width: 36px; height: 3px;
+  background: var(--tn-red); border-radius: 2px; margin-top: 9px;
+}
+.lp-sub { margin-bottom: 1.5rem; margin-top: 2px; }
+
+/* Onglets de rôle : indicateur actif plus marqué */
+.role-tabs {
+  background: var(--bg-3);
+  padding: 5px;
+  border-radius: 12px;
+  gap: 4px;
+}
+.role-tab { border-radius: 9px; padding: 10px 6px; transition: all .2s var(--ease-out); }
+.role-tab .rt-icon { transition: transform .25s var(--ease-spring); }
+.role-tab:hover .rt-icon { transform: scale(1.12) translateY(-1px); }
+.role-tab.active {
+  box-shadow: 0 2px 8px -2px rgba(231,0,19,.25), 0 0 0 1px rgba(231,0,19,.10);
+}
+
+/* Badge de portée : plus aéré */
+.scope-badge {
+  padding: 9px 13px; border-radius: 9px; font-size: 11.5px;
+  line-height: 1.45; align-items: flex-start; gap: 7px;
+}
+
+/* Champs : focus plus doux, icônes mieux centrées */
+.form-input {
+  border-radius: 9px;
+  padding: 11px 13px;
+  font-size: 13.5px;
+  transition: border-color .18s var(--ease-out), background .18s var(--ease-out),
+              box-shadow .22s var(--ease-out);
+}
+.form-input.has-icon { padding-left: 38px; }
+.form-input:hover:not(:focus) { border-color: var(--border-2); }
+.form-input:focus { box-shadow: 0 0 0 4px rgba(231,0,19,.10); }
+.form-input-icon { left: 12px; font-size: 14px; opacity: .85; }
+.form-label { font-size: 10.5px; letter-spacing: .5px; margin-bottom: 6px; }
+
+/* Bouton de connexion : dégradé + relief + lueur */
+.btn-login {
+  background: linear-gradient(145deg, #ff1a2e, var(--tn-red) 55%, var(--tn-red-dark));
+  border-radius: 11px;
+  padding: 13px;
+  font-size: 14px;
+  box-shadow: 0 6px 18px -6px rgba(231,0,19,.5), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.btn-login:hover {
+  box-shadow: 0 10px 26px -8px rgba(231,0,19,.6), inset 0 1px 0 rgba(255,255,255,.22);
+  transform: translateY(-2px);
+}
+.btn-login:active { transform: translateY(0); }
+
+.form-link { font-weight: 500; transition: color .15s var(--ease-out); }
+
+/* Notes (TLS / démo) : style « carte d'info » plus net */
+.lp-right form + div,
+.lp-right form ~ div[style*="warn-soft"] {
+  border-radius: 9px !important;
+}
+
+/* Entrée du formulaire plus vivante */
+.lp-shell { animation: loginAppear .55s var(--ease-spring) both; }
+
+/* Responsive : panneau gauche masqué → soigner le panneau seul */
+@media (max-width: 1024px) {
+  .lp-shell { max-width: 440px; }
+  .lp-right { padding: 2.4rem 2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-shell, .lp-role-pill, .role-tab .rt-icon { animation: none !important; }
+  .lp-role-pill:hover { transform: none; }
+}
+
+/* Globe filaire 3D du panneau de connexion (décoratif) */
+.lp-globe-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;            /* derrière le contenu (logo/tagline/pills en z-index:1) */
+  pointer-events: none;
+  opacity: .55;
+  -webkit-mask-image: radial-gradient(120% 90% at 70% 38%, #000 30%, transparent 80%);
+          mask-image: radial-gradient(120% 90% at 70% 38%, #000 30%, transparent 80%);
+}
+
+/* ══════════════════════════════════════════════
+   PRÉDICTION — overlay de chargement (UX only)
+══════════════════════════════════════════════ */
+#pred-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 28px 22px;
+  text-align: center;
+  border-radius: var(--r3);
+  background: linear-gradient(135deg, #ffffff 0%, var(--tn-red-soft) 140%);
+  z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .35s var(--ease-out), visibility .35s var(--ease-out);
+}
+#pred-loading.show { opacity: 1; visibility: visible; }
+
+/* Spinner moderne : 3 anneaux décalés */
+.pl-spinner { position: relative; width: 52px; height: 52px; }
+.pl-spinner span {
+  position: absolute; inset: 0;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  border-top-color: var(--tn-red);
+  animation: plSpin 1s var(--ease-in-out) infinite;
+}
+.pl-spinner span:nth-child(2) { inset: 7px; border-top-color: rgba(231,0,19,.55); animation-duration: 1.3s; animation-direction: reverse; }
+.pl-spinner span:nth-child(3) { inset: 14px; border-top-color: rgba(231,0,19,.3); animation-duration: 1.6s; }
+@keyframes plSpin { to { transform: rotate(360deg); } }
+
+/* Message rotatif avec fondu */
+.pl-msg {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  min-height: 20px; letter-spacing: -.01em;
+  transition: opacity .35s var(--ease-out), transform .35s var(--ease-out);
+}
+.pl-msg.fade-out { opacity: 0; transform: translateY(-4px); }
+
+/* Barre de progression indéterminée */
+.pl-progress {
+  width: min(240px, 80%); height: 5px;
+  background: rgba(231,0,19,.12);
+  border-radius: 99px; overflow: hidden;
+}
+.pl-progress-bar {
+  width: 40%; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--tn-red), transparent);
+  animation: plIndeterminate 1.25s var(--ease-in-out) infinite;
+}
+@keyframes plIndeterminate {
+  0%   { transform: translateX(-130%); }
+  100% { transform: translateX(330%); }
+}
+
+.pl-hint { font-size: 11px; color: var(--text-3); font-family: var(--mono); letter-spacing: .2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-spinner span { animation-duration: 2s !important; }
+  .pl-progress-bar { animation-duration: 2s !important; }
+  .pl-msg { transition: none; }
+  #pred-loading { transition: opacity .2s linear; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<!-- ╔══════════════════════════╗
+     ║   LOGIN SCREEN
+     ╚══════════════════════════╝ -->
+<div id="login-screen">
+  <div class="lp-shell">
+    <!-- Left decorative panel -->
+    <div class="lp-left">
+      <div class="lp-left-grid"></div>
+      <canvas id="login-globe" class="lp-globe-canvas" aria-hidden="true"></canvas>
+
+      <div class="lp-logo">
+        <div class="lp-logo-icon">EP</div>
+        <div class="lp-logo-text">
+          EduPredict
+          <small>منصة التنبؤ المدرسي</small>
+        </div>
+      </div>
+
+      <div class="lp-tagline">
+        <h2>Plateforme d'analyse et de prédiction scolaire</h2>
+        <p>Accès sécurisé pour les acteurs de l'éducation nationale tunisienne. Connectez-vous avec votre rôle pour accéder à votre espace personnalisé.</p>
+      </div>
+
+      <div class="lp-roles-preview">
+        <div class="lp-role-pill" onclick="loginAs('admin')">
+          <span class="rp-icon">🛡️</span>
+          <span class="rp-name">Administrateur</span>
+          <span class="rp-desc">Accès complet</span>
+        </div>
+        <div class="lp-role-pill" onclick="loginAs('directeur')">
+          <span class="rp-icon">🏫</span>
+          <span class="rp-name">Directeur</span>
+          <span class="rp-desc">Établissement</span>
+        </div>
+        <div class="lp-role-pill" onclick="loginAs('inspecteur')">
+          <span class="rp-icon">🔍</span>
+          <span class="rp-name">Inspecteur</span>
+          <span class="rp-desc">Région</span>
+        </div>
+      </div>
+
+      <div class="lp-flag">
+        <div class="lp-flag-block"></div>
+        <span class="lp-flag-text">République Tunisienne — وزارة التربية</span>
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="lp-right">
+      <div class="lp-heading">Connexion</div>
+      <div class="lp-sub">Ministère de l'Éducation — Espace sécurisé</div>
+
+      <!-- Role tabs -->
+      <div class="role-tabs" role="tablist">
+        <button class="role-tab active" id="tab-admin" onclick="switchLoginRole('admin')" role="tab">
+          <span class="rt-icon">🛡️</span>
+          Admin
+        </button>
+        <button class="role-tab" id="tab-directeur" onclick="switchLoginRole('directeur')" role="tab">
+          <span class="rt-icon">🏫</span>
+          Directeur
+        </button>
+        <button class="role-tab" id="tab-inspecteur" onclick="switchLoginRole('inspecteur')" role="tab">
+          <span class="rt-icon">🔍</span>
+          Inspecteur
+        </button>
+      </div>
+
+      <!-- Scope badges -->
+      <div id="badge-admin" class="scope-badge scope-admin">
+        🔓 Accès complet — tous les établissements et toutes les données
+      </div>
+      <div id="badge-directeur" class="scope-badge scope-directeur hidden">
+        🏛️ Accès restreint — votre établissement uniquement
+      </div>
+      <div id="badge-inspecteur" class="scope-badge scope-inspecteur hidden">
+        📍 Accès régional — périmètre d'inspection assigné
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" autocomplete="on">
+        <!-- Extra fields: Directeur -->
+        <div id="extra-directeur" class="hidden">
+          <div class="form-group">
+            <label class="form-label">Code établissement</label>
+            <div class="form-input-wrap">
+              <span class="form-input-icon">🏫</span>
+              <input class="form-input has-icon" type="text" id="field-etab" placeholder="ex : TN-0847" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra fields: Inspecteur -->
+        <div id="extra-inspecteur" class="hidden">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Gouvernorat</label>
+              <select class="form-input" id="field-gouv">
+                <option value="">— Sélectionner —</option>
+                <option>Tunis</option><option>Ariana</option><option>Ben Arous</option>
+                <option>Manouba</option><option>Nabeul</option><option>Bizerte</option>
+                <option>Sfax</option><option>Sousse</option><option>Kairouan</option>
+                <option>Gabès</option><option>Gafsa</option><option>Médenine</option>
+                <option>Kasserine</option><option>Sidi Bouzid</option><option>Tataouine</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Matricule inspecteur</label>
+              <input class="form-input" id="field-matricule" type="text" placeholder="INS-2024-01" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Common fields -->
+        <div class="form-group">
+          <label class="form-label">Identifiant</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">👤</span>
+            <input class="form-input has-icon" type="text" id="login-id" placeholder="Saisir votre identifiant" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon">🔒</span>
+            <input class="form-input has-icon" type="password" id="login-pwd" placeholder="••••••••••" autocomplete="current-password" required style="padding-right:38px;" />
+            <button type="button" class="form-pwd-toggle" id="pwd-toggle" onclick="togglePwd()" aria-label="Afficher/masquer le mot de passe">👁️</button>
+          </div>
+          <a class="form-link" onclick="alert('Contactez l\'administrateur système pour réinitialiser votre mot de passe.')">Mot de passe oublié ?</a>
+        </div>
+
+        <!-- Error bar -->
+        <div class="login-err" id="login-err">
+          ⚠️ <span id="login-err-text">Identifiant ou mot de passe incorrect.</span>
+        </div>
+
+        <button type="submit" class="btn-login" id="btn-login">
+          <div class="btn-spinner" id="login-spinner"></div>
+          <span class="btn-text-wrap" id="btn-login-label">
+            <span class="lbl-icon">🔐</span> Se connecter en tant qu'Admin
+          </span>
+        </button>
+      </form>
+
+      <div style="margin-top:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:7px;">
+        <span style="color:var(--ok);font-size:14px;">🛡️</span>
+        Connexion chiffrée TLS 1.3 — Session sécurisée Ministère de l'Éducation
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   APP (post-login)
+     ╚══════════════════════════╝ -->
+<div class="layout" id="app" style="display:none;">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-icon">EP</div>
+    <div class="logo-text">
+      EduPredict
+      <small>منصة التنبؤ المدرسي</small>
+    </div>
+  </div>
+
+  <!-- Dynamic role badge -->
+  <div id="sidebar-role-badge" class="sidebar-role-badge srb-admin">
+    <div class="srb-dot"></div>
+    <span id="srb-text">Admin — Accès complet</span>
+  </div>
+
+  <div class="sidebar-section-label">Navigation</div>
+  <nav class="nav-group">
+    <div class="nav-item active" onclick="showPage('dashboard')" data-tip="Tableau de bord">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
+      <span class="nav-label">Tableau de bord</span>
+    </div>
+    <div class="nav-item" onclick="showPage('analytics')" data-tip="Analyse avancée">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      <span class="nav-label">Analyse</span>
+    </div>
+    <div class="nav-item" onclick="showPage('prediction')" data-tip="Prédiction modèle">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span class="nav-label">Prédiction</span>
+    </div>
+    <div class="nav-item" onclick="showPage('historique')" data-tip="Historique">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="nav-label">Historique</span>
+    </div>
+    <div class="nav-item" onclick="showPage('lexique')" data-tip="Lexique KPI">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      <span class="nav-label">Lexique KPI</span>
+    </div>
+    <div class="nav-item" onclick="showPage('etablissements')" data-tip="Établissements">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <span class="nav-label">Établissements</span>
+    </div>
+    <div class="nav-item" onclick="showPage('assistant')" data-tip="Assistant IA">
+      <svg class="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M21 12a8 8 0 01-8 8H7l-4 3V12a8 8 0 018-8h2a8 8 0 018 8z"/></svg>
+      <span class="nav-label">Assistant</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div id="api-badge" class="api-pill ok">
+      <div class="api-dot"></div>
+      <span class="api-text">API connectée</span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-flag">
+      <div class="topbar-flag-emoji"></div>
+      <div class="topbar-flag-text">
+        République Tunisienne
+        <small>الجمهورية التونسية</small>
+      </div>
+    </div>
+    <div class="breadcrumb" id="topbar-breadcrumb">
+      <span>Accueil</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current" id="breadcrumb-current">Tableau de bord</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-search">
+      <svg class="topbar-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Rechercher un indicateur…">
+    </div>
+    <button class="topbar-icon-btn" data-tip="Notifications">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      <span class="notif-dot"></span>
+    </button>
+    <div class="topbar-user" id="topbar-user">
+      <div class="topbar-avatar" id="topbar-avatar">ME</div>
+      <div class="topbar-user-name">
+        <span id="topbar-user-name">Ministère</span>
+        <small id="topbar-user-role">Admin</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-content">
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: DASHBOARD
+     ╚══════════════════════════╝ -->
+<div id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Tableau de bord</div>
+      <div class="page-sub">Indicateurs de performance et analyse synthétique de l'établissement</div>
+    </div>
+    <div class="page-date" id="today-date"></div>
+  </div>
+
+  <div class="kpi-strip" id="kpi-strip"></div>
+
+  <div class="dash-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Évolution de la réussite scolaire</div>
+        <span class="badge badge-neon">2017 — 2025</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-main-trend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Score de performance</div>
+        <span class="badge badge-amber">2025</span>
+      </div>
+      <div class="score-3d-wrap">
+        <div class="score-3d-inner">
+          <div class="score-face">
+            <canvas id="score-orb" class="score-orb-canvas" aria-hidden="true"></canvas>
+            <div class="score-big">68.00</div>
+            <div class="score-label">Taux de réussite</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Matrice KPI</div>
+        <span class="badge badge-violet">3 années</span>
+      </div>
+      <div class="chart-wrap-sm"><canvas id="chart-radar-main"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Indicateurs clés</div>
+        <span class="badge badge-green">Live</span>
+      </div>
+      <div class="rings-row" id="rings-row"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Examens professionnels</div>
+        <span class="badge badge-amber">2017 — 2024</span>
+      </div>
+      <div class="chart-wrap-sm"><canvas id="chart-bar-perf"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: ANALYTICS
+     ╚══════════════════════════╝ -->
+<div id="page-analytics" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Analyse</div>
+      <div class="page-sub">Analyse approfondie des tendances et corrélations</div>
+    </div>
+  </div>
+
+  <div class="dash-grid" style="margin-bottom:14px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Abandons vs Réussite</div>
+        <span class="badge badge-red">Corrélation négative</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-scatter"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-label">Enseignants quittants</div>
+        <span class="badge badge-amber">Impact RH</span>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-profs"></canvas></div>
+    </div>
+  </div>
+
+  <div class="dash-grid-3">
+    <div class="card">
+      <div class="card-header"><div class="card-label">Distribution 2023</div></div>
+      <div class="chart-wrap-sm"><canvas id="chart-doughnut-22"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-label">Distribution 2024</div></div>
+      <div class="chart-wrap-sm"><canvas id="chart-doughnut-23"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-label">Distribution 2025</div></div>
+      <div class="chart-wrap-sm"><canvas id="chart-doughnut-24"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-label">Évolution multi-KPI empilée</div>
+      <span class="badge badge-neon">2023–2025</span>
+    </div>
+    <div class="chart-wrap-lg"><canvas id="chart-stacked"></canvas></div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: PREDICTION
+     ╚══════════════════════════╝ -->
+<div id="page-prediction" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Prédiction</div>
+      <div class="page-sub">Modèle neuronal — prévision de la réussite 2026 à partir de l'historique 2023 → 2025</div>
+    </div>
+    <span class="badge badge-neon">Modèle actif</span>
+  </div>
+
+  <div class="pred-grid">
+    <div class="pred-left">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-label">Année 1 — 2023</div>
+          <span class="badge badge-neon">Historique</span>
+        </div>
+        <div class="kpi-input-group" id="kpi-y1"></div>
+        <div class="success-row">
+          <label>Taux de réussite observé</label>
+          <input type="number" id="succ-y1" min="0" max="100" step="0.01" value="66.49" readonly tabindex="-1" class="locked">
+          <span class="unit">%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-label">Année 2 — 2024</div>
+          <span class="badge badge-green">Historique</span>
+        </div>
+        <div class="kpi-input-group" id="kpi-y2"></div>
+        <div class="success-row">
+          <label>Taux de réussite observé</label>
+          <input type="number" id="succ-y2" min="0" max="100" step="0.01" value="68.52" readonly tabindex="-1" class="locked" style="color:var(--tn-red);border-bottom-color:var(--tn-red);">
+          <span class="unit">%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-label">Année 3 — 2025</div>
+          <span class="badge badge-amber">Historique</span>
+        </div>
+        <div class="kpi-input-group" id="kpi-y3"></div>
+        <div class="success-row">
+          <label>Taux de réussite observé</label>
+          <input type="number" id="succ-y3" min="0" max="100" step="0.01" value="68" readonly tabindex="-1" class="locked">
+          <span class="unit">%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-label">Année cible — 2026</div>
+          <span class="badge badge-neon">Prédiction</span>
+        </div>
+        <div class="kpi-input-group" id="kpi-y4"></div>
+      </div>
+
+      <div id="err-bar" class="err-bar">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="1.5"/><path stroke-linecap="round" stroke-width="1.5" d="M12 8v4m0 4h.01"/></svg>
+        <span id="err-text"></span>
+      </div>
+
+      <button class="predict-btn" id="btn-predict" onclick="runPrediction()">
+        <div class="btn-spinner"></div>
+        <span class="btn-text">Exécuter la prédiction</span>
+      </button>
+    </div>
+
+    <div class="pred-right">
+      <div class="card">
+        <div class="card-label" style="margin-bottom:14px;">Résultat prédit — 2026</div>
+        <div>
+          <div class="result-inner" id="result-inner">
+            <div class="result-score-big" id="res-score">—<span class="result-score-unit">%</span></div>
+            <div id="res-badge" style="margin-top:8px;"></div>
+            <svg class="gauge-arc-svg" viewBox="0 0 300 80">
+              <path d="M 30 75 A 120 120 0 0 1 270 75" fill="none" stroke="rgba(15,23,42,0.06)" stroke-width="12" stroke-linecap="round"/>
+              <path id="gauge-arc-fill" d="M 30 75 A 120 120 0 0 1 270 75" fill="none" stroke="url(#arcGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="376" stroke-dashoffset="376" style="transition:stroke-dashoffset 1.4s var(--ease-out);"/>
+              <defs>
+                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#b91c1c"/>
+                  <stop offset="50%" stop-color="#b45309"/>
+                  <stop offset="100%" stop-color="#047857"/>
+                </linearGradient>
+              </defs>
+              <text x="30"  y="72" fill="var(--text-3)" font-size="9" font-family="JetBrains Mono">0%</text>
+              <text x="256" y="72" fill="var(--text-3)" font-size="9" font-family="JetBrains Mono">100%</text>
+            </svg>
+            <div class="compare-chips">
+              <div class="compare-chip"><div class="chip-yr">2023</div><div class="chip-val" id="cmp-y1">—</div><div class="chip-d" id="cdelta-y1"></div></div>
+              <div class="compare-chip"><div class="chip-yr">2024</div><div class="chip-val" id="cmp-y2">—</div><div class="chip-d" id="cdelta-y2"></div></div>
+              <div class="compare-chip"><div class="chip-yr">2025</div><div class="chip-val" id="cmp-y3">—</div><div class="chip-d" id="cdelta-y3"></div></div>
+              <div class="compare-chip highlight"><div class="chip-yr">2026 IA</div><div class="chip-val" id="cmp-y4">—</div><div class="chip-d" id="cdelta-trend"></div></div>
+            </div>
+            <div class="interp-card" id="res-interp"></div>
+          </div>
+        </div>
+        <div id="before-result" style="text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;">
+          <div style="font-size:36px;margin-bottom:8px;">📊</div>
+          Paramétrez les KPI et exécutez la prédiction
+        </div>
+
+        <!-- Overlay de chargement (UX uniquement) -->
+        <div id="pred-loading" aria-live="polite" aria-busy="false">
+          <div class="pl-spinner"><span></span><span></span><span></span></div>
+          <div class="pl-msg" id="pred-loading-msg">Veuillez patienter…</div>
+          <div class="pl-progress"><div class="pl-progress-bar"></div></div>
+          <div class="pl-hint">Modèle neuronal — prévision 2026</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label" style="margin-bottom:12px;">Comparaison des méthodes — prévision 2026</div>
+        <div class="chart-wrap-sm"><canvas id="chart-method-compare"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: HISTORIQUE
+     ╚══════════════════════════╝ -->
+<div id="page-historique" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Historique</div>
+      <div class="page-sub">Séries longues 2017–2025 — tous les KPI</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-header">
+      <div class="card-label">Évolution temporelle complète</div>
+      <span class="badge badge-neon">2017 → 2025</span>
+    </div>
+    <div class="chart-wrap-lg"><canvas id="chart-hist-long"></canvas></div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="card">
+      <div class="card-header"><div class="card-label">Tableau complet</div></div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="hist-table-full"></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="margin-bottom:14px;">Timeline des événements</div>
+      <div id="timeline-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: LEXIQUE
+     ╚══════════════════════════╝ -->
+<div id="page-lexique" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Lexique KPI</div>
+      <div class="page-sub">Définitions, formules et directions d'impact</div>
+    </div>
+  </div>
+  <div class="lex-grid" id="lex-grid"></div>
+</div>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: ETABLISSEMENTS
+     ╚══════════════════════════╝ -->
+<div id="page-etablissements" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Établissements</div>
+      <div class="page-sub">Saisie des KPI par lycée — tableau de suivi et de prédiction</div>
+    </div>
+    <span class="badge badge-neon" id="etab-count-badge">0 établissement(s)</span>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="etab-toolbar">
+    <div class="etab-search-wrap">
+      <svg class="etab-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="etab-search" placeholder="Rechercher un établissement…" oninput="filterEtab(this.value)">
+    </div>
+    <button class="btn-secondary" onclick="loadEtablissements()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      Actualiser
+    </button>
+    <button class="btn-primary" id="etab-new-btn" onclick="openEtabModal()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Nouvel établissement
+    </button>
+  </div>
+
+  <!-- Table card -->
+  <div class="card">
+    <div class="etab-table-wrap">
+      <div id="etab-table-container">
+        <div class="etab-empty">
+          <div class="etab-empty-icon">🏫</div>
+          <div>Aucun établissement enregistré.</div>
+          <div style="font-size:12px;margin-top:6px;color:var(--text-4);">Cliquez sur « Nouvel établissement » pour commencer.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.ep-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#16a34a;margin-right:5px;vertical-align:middle;box-shadow:0 0 0 3px rgba(22,163,74,.18);}
+.ep-chat-card{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:420px;padding:0;overflow:hidden;}
+/* En-tête / logo de l'assistant Rayen */
+.ep-chat-head{display:flex;align-items:center;gap:11px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--bg-2);}
+.ep-logo,.ep-avatar{flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:linear-gradient(135deg,var(--tn-red),var(--tn-red-dark));box-shadow:var(--shadow-sm);}
+.ep-logo{width:38px;height:38px;border-radius:12px;}
+.ep-logo svg{width:22px;height:22px;}
+.ep-head-name{font-weight:700;font-size:14px;color:var(--text);line-height:1.25;}
+.ep-head-sub{font-size:11.5px;color:var(--text-4);display:flex;align-items:center;gap:5px;}
+.ep-chat-body{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:12px;background:var(--bg-3);}
+.ep-msg{max-width:72%;padding:11px 15px;border-radius:16px;font-size:13.5px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word;box-shadow:var(--shadow-sm);}
+.ep-msg.user{align-self:flex-end;background:var(--tn-red);color:#fff;border-bottom-right-radius:5px;}
+.ep-msg.bot{align-self:flex-start;background:var(--bg-2);color:var(--text-2);border:1px solid var(--border);border-bottom-left-radius:5px;}
+.ep-msg.err{align-self:flex-start;background:var(--tn-red-soft);color:var(--tn-red-dark);border:1px solid var(--tn-red-soft);border-bottom-left-radius:5px;}
+/* Ligne message du bot : avatar + bulle */
+.ep-bot-row{display:flex;align-items:flex-end;gap:9px;align-self:flex-start;max-width:82%;}
+.ep-bot-row .ep-msg.bot{max-width:100%;}
+.ep-avatar{width:30px;height:30px;border-radius:9px;}
+.ep-avatar svg{width:17px;height:17px;}
+.ep-typing{align-self:flex-start;display:flex;gap:4px;padding:13px 16px;background:var(--bg-2);border:1px solid var(--border);border-radius:16px;}
+.ep-typing span{width:6px;height:6px;border-radius:50%;background:var(--text-4);animation:epBlink 1.2s infinite ease-in-out;}
+.ep-typing span:nth-child(2){animation-delay:.2s;}.ep-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes epBlink{0%,80%,100%{opacity:.3;}40%{opacity:1;}}
+.ep-suggests{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 0;background:var(--bg-2);}
+.ep-chip{border:1px solid var(--border-2);background:var(--bg-3);color:var(--text-2);border-radius:999px;padding:6px 13px;font-size:12px;cursor:pointer;transition:all .15s var(--ease-out);}
+.ep-chip:hover{border-color:var(--tn-red);color:var(--tn-red);background:var(--tn-red-soft);}
+.ep-chat-foot{display:flex;gap:10px;padding:16px;border-top:1px solid var(--border);background:var(--bg-2);}
+.ep-chat-foot input{flex:1;border:1px solid var(--border-2);border-radius:12px;padding:12px 15px;font-size:13.5px;font-family:inherit;outline:none;color:var(--text);transition:border-color .15s;}
+.ep-chat-foot input:focus{border-color:var(--tn-red);}
+.ep-chat-foot button{border:none;background:var(--tn-red);color:#fff;border-radius:12px;width:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.ep-chat-foot button:hover{background:var(--tn-red-dark);}
+.ep-chat-foot button:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+
+<!-- ╔══════════════════════════╗
+     ║   PAGE: ASSISTANT (CHATBOT)
+     ╚══════════════════════════╝ -->
+<div id="page-assistant" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Assistant EduPredict</div>
+      <div class="page-sub">Répond uniquement à partir des KPI, de l'historique et des établissements enregistrés</div>
+    </div>
+    <span class="badge badge-neon"><span class="ep-live-dot"></span> Ancré sur vos données</span>
+  </div>
+
+  <div class="card ep-chat-card">
+    <div class="ep-chat-head">
+      <div class="ep-logo">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v3.32L12 20l7-3.5v-3.32l-7 3.82-7-3.82z"/></svg>
+      </div>
+      <div>
+        <div class="ep-head-name">Rayen</div>
+        <div class="ep-head-sub"><span class="ep-live-dot"></span> Assistant EduPredict 🇹🇳</div>
+      </div>
+    </div>
+    <div class="ep-chat-body" id="ep-chat-body"></div>
+    <div class="ep-suggests">
+      <button class="ep-chip" onclick="epAsk('Que signifie le KPI surchargeClasse ?')">Définir surchargeClasse</button>
+      <button class="ep-chip" onclick="epAsk('Quelle est l\'évolution du taux de réussite ?')">Évolution réussite</button>
+      <button class="ep-chip" onclick="epAsk('Combien d\'établissements sont enregistrés ?')">Nombre d'établissements</button>
+    </div>
+    <form class="ep-chat-foot" id="ep-chat-form">
+      <input id="ep-chat-input" type="text" placeholder="Posez une question sur les données du projet…" autocomplete="off" />
+      <button type="submit" id="ep-chat-send" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+  </div>
+</div>
+
+</div><!-- /page-content -->
+
+<!-- ╔══════════════════════════╗
+     ║   MODAL ÉTABLISSEMENT
+     ╚══════════════════════════╝ -->
+<div class="modal-overlay" id="etab-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">🏫 <span id="modal-etab-title">Nouvel établissement</span></div>
+      <button class="modal-close" onclick="closeEtabModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mform-err" id="modal-err"></div>
+      <div class="save-success" id="modal-success">✅ Établissement enregistré avec succès.</div>
+
+      <!-- Identification -->
+      <div class="mform-section">📋 Identification</div>
+      <div class="mform-row">
+        <div class="mform-group">
+          <label class="mform-label">Nom de l'établissement *</label>
+          <input class="mform-input" type="text" id="m-nom" placeholder="ex : Lycée Farhat Hached" style="font-family:var(--sans);font-size:13px;">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Identifiant unique *</label>
+          <input class="mform-input" type="text" id="m-id" placeholder="ex : TN-0001">
+          <div class="mform-hint">Code unique — sert à la mise à jour automatique.</div>
+        </div>
+      </div>
+      <div class="mform-row">
+        <div class="mform-group">
+          <label class="mform-label">Région / Gouvernorat</label>
+          <input class="mform-input" type="text" id="m-region" placeholder="ex : Sfax" style="font-family:var(--sans);font-size:13px;">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Type d'établissement</label>
+          <input class="mform-input" type="text" id="m-type" placeholder="ex : Lycée" style="font-family:var(--sans);font-size:13px;">
+        </div>
+      </div>
+      <div class="mform-row-full">
+        <div class="mform-group">
+          <label class="mform-label">Adresse</label>
+          <input class="mform-input" type="text" id="m-adresse" placeholder="ex : Rue de la République, Sfax" style="font-family:var(--sans);font-size:13px;">
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="mform-section">📊 Indicateurs KPI</div>
+      <div class="kpi-modal-grid">
+        <div class="mform-group">
+          <label class="mform-label">Charge horaire prof <small>(h)</small></label>
+          <input class="mform-input" type="number" id="m-charge" step="0.01" min="0" placeholder="16.95">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Profs quittants <small>(nb)</small></label>
+          <input class="mform-input" type="number" id="m-profs" step="1" min="0" placeholder="4">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Activités culturelles <small>(nb)</small></label>
+          <input class="mform-input" type="number" id="m-activ" step="1" min="0" placeholder="14">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Actes violents <small>(nb)</small></label>
+          <input class="mform-input" type="number" id="m-violence" step="1" min="0" placeholder="7">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Élèves ≥ 12 <small>(%)</small></label>
+          <input class="mform-input" type="number" id="m-excellent" step="0.01" min="0" max="100" placeholder="12">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Élèves abandonnant <small>(nb)</small></label>
+          <input class="mform-input" type="number" id="m-abandon" step="1" min="0" placeholder="57">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Surcharge classes <small>(%)</small></label>
+          <input class="mform-input" type="number" id="m-surcharge" step="0.01" min="0" max="100" placeholder="30">
+        </div>
+        <div class="mform-group">
+          <label class="mform-label">Réussite générale <small>(%)</small></label>
+          <input class="mform-input" type="number" id="m-reussite" step="0.01" min="0" max="100" placeholder="68.52">
+        </div>
+      </div>
+
+      <!-- Prediction -->
+      <div class="mform-section">🤖 Résultat de prédiction</div>
+      <div class="mform-row">
+        <div class="mform-group">
+          <label class="mform-label">Prédiction KPI <small>(%)</small></label>
+          <input class="mform-input" type="number" id="m-pred" step="0.01" min="0" max="100" placeholder="Optionnel — résultat du modèle">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button class="btn-secondary" style="width:100%;justify-content:center;" onclick="autoPredictModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Auto-prédire via API
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEtabModal()">Annuler</button>
+      <button class="btn-primary" id="modal-save-btn" onclick="saveEtablissement()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- /layout -->
+
+<script>
+/* ════════════════════════════════════════════════
+   3D BACKGROUND
+════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.z = 5;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Depth field: two parallax layers for a subtle sense of volume.
+  function makeLayer(count, spreadXY, spreadZ, size, opacity, color) {
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      pos[i*3]   = (Math.random() - 0.5) * spreadXY;
+      pos[i*3+1] = (Math.random() - 0.5) * spreadXY;
+      pos[i*3+2] = (Math.random() - 0.5) * spreadZ;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ color, size, transparent: true, opacity, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    scene.add(points);
+    return points;
+  }
+
+  const far  = makeLayer(420, 22, 9, 0.022, 0.12, 0xE70013); // distant, dim, red
+  const near = makeLayer(140, 16, 5, 0.040, 0.10, 0x94a3b8); // closer, larger, cool grey
+  const group = new THREE.Group();
+  scene.add(group);
+  group.add(far, near);
+
+  // Cursor-reactive parallax target (eased toward each frame).
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  if (!reduceMotion) {
+    window.addEventListener('pointermove', (e) => {
+      mx = (e.clientX / window.innerWidth  - 0.5);
+      my = (e.clientY / window.innerHeight - 0.5);
+    }, { passive: true });
+  }
+
+  function resize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Pause the loop when the tab is hidden — keeps it light.
+  let running = true;
+  document.addEventListener('visibilitychange', () => {
+    running = !document.hidden;
+    if (running) animate();
+  });
+
+  let t = 0;
+  function animate() {
+    if (!running) return;
+    requestAnimationFrame(animate);
+    t += 0.0006;
+
+    // Slow autonomous drift.
+    far.rotation.y  = t * 0.02;
+    near.rotation.y = t * 0.035;
+    near.rotation.x = Math.sin(t * 0.6) * 0.04; // gentle breathing
+
+    // Eased cursor parallax — layers shift at different rates for depth.
+    cx += (mx - cx) * 0.04;
+    cy += (my - cy) * 0.04;
+    group.rotation.y = cx * 0.25;
+    group.rotation.x = cy * 0.18;
+    near.position.x = cx * 0.6;
+    near.position.y = -cy * 0.6;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+/* ════════════════════════════════════════════════
+   LOGIN GLOBE — wireframe « data globe » 3D décoratif
+   sur le panneau gauche de connexion (white on red)
+════════════════════════════════════════════════ */
+(function initLoginGlobe() {
+  const canvas = document.getElementById('login-globe');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const loginScreen = document.getElementById('login-screen');
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.z = 4.6;
+
+  const group = new THREE.Group();
+  scene.add(group);
+  group.rotation.z = 0.35; // léger axe incliné, comme un globe
+
+  // Sphère géodésique filaire (blanc translucide)
+  const sphere = new THREE.IcosahedronGeometry(1.55, 3);
+  const globe = new THREE.LineSegments(
+    new THREE.WireframeGeometry(sphere),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28 })
+  );
+  group.add(globe);
+
+  // Points lumineux aux sommets
+  const dots = new THREE.Points(
+    new THREE.IcosahedronGeometry(1.55, 2),
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.045, transparent: true, opacity: 0.7 })
+  );
+  group.add(dots);
+
+  // Anneau orbital incliné
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(2.05, 2.1, 96),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
+  );
+  ring.rotation.x = Math.PI / 2.2;
+  group.add(ring);
+
+  function size() {
+    const r = canvas.getBoundingClientRect();
+    const w = Math.max(1, r.width), h = Math.max(1, r.height);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    return r.width > 0;
+  }
+  size();
+  window.addEventListener('resize', size);
+
+  let t = 0;
+  (function loop() {
+    requestAnimationFrame(loop);
+    // Ne pas dépenser de GPU quand l'écran de connexion est masqué (après login)
+    if (loginScreen && loginScreen.style.display === 'none') return;
+    if (!size()) return; // panneau caché (mobile) → rien à dessiner
+    t += reduceMotion ? 0.0008 : 0.0032;
+    group.rotation.y = t;
+    dots.rotation.y = t * 1.0;
+    ring.rotation.z = t * 0.5;
+    renderer.render(scene, camera);
+  })();
+})();
+
+/* ════════════════════════════════════════════════
+   SCORE ORB — contained 3D wireframe in score card
+════════════════════════════════════════════════ */
+function initScoreOrb() {
+  const canvas = document.getElementById('score-orb');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.z = 4.2;
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // Faceted wireframe icosahedron — clean, geometric, "premium".
+  const ico = new THREE.IcosahedronGeometry(1.5, 1);
+  const wire = new THREE.LineSegments(
+    new THREE.EdgesGeometry(ico),
+    new THREE.LineBasicMaterial({ color: 0xE70013, transparent: true, opacity: 0.45 })
+  );
+  group.add(wire);
+
+  // Inner glowing core points at each vertex.
+  const dots = new THREE.Points(
+    ico,
+    new THREE.PointsMaterial({ color: 0xE70013, size: 0.07, transparent: true, opacity: 0.55 })
+  );
+  group.add(dots);
+
+  // Soft outer halo ring for depth.
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(1.85, 1.9, 64),
+    new THREE.MeshBasicMaterial({ color: 0xE70013, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
+  );
+  ring.rotation.x = Math.PI / 2.6;
+  group.add(ring);
+
+  function size() {
+    const r = canvas.getBoundingClientRect();
+    const w = Math.max(1, r.width), h = Math.max(1, r.height);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  window.addEventListener('resize', size);
+
+  let running = true;
+  document.addEventListener('visibilitychange', () => {
+    running = !document.hidden;
+    if (running) loop();
+  });
+
+  let t = 0;
+  function loop() {
+    if (!running) return;
+    requestAnimationFrame(loop);
+    t += reduceMotion ? 0.0015 : 0.005;
+    group.rotation.y = t;
+    group.rotation.x = Math.sin(t * 0.7) * 0.25;
+    const s = 1 + Math.sin(t * 1.4) * 0.025; // gentle breathing scale
+    group.scale.set(s, s, s);
+    ring.rotation.z = t * 0.4;
+    renderer.render(scene, camera);
+  }
+  loop();
+}
+
+/* ════════════════════════════════════════════════
+   LOGIN LOGIC
+════════════════════════════════════════════════ */
+let currentLoginRole = 'admin';
+
+const ROLE_LABELS = {
+  admin:      { btn: "Se connecter en tant qu'Admin",      badge: "srb-admin",      text: "Admin — Accès complet",    avatar: "AD", name: "Administrateur", role: "Admin" },
+  directeur:  { btn: "Se connecter en tant que Directeur", badge: "srb-directeur",  text: "Directeur d'établissement",avatar: "DI", name: "Directeur",       role: "Directeur" },
+  inspecteur: { btn: "Se connecter en tant qu'Inspecteur", badge: "srb-inspecteur", text: "Inspecteur régional",       avatar: "IN", name: "Inspecteur",       role: "Inspecteur" },
+};
+
+function switchLoginRole(role) {
+  currentLoginRole = role;
+  ['admin','directeur','inspecteur'].forEach(r => {
+    document.getElementById('tab-'+r).classList.toggle('active', r === role);
+    document.getElementById('badge-'+r).classList.toggle('hidden', r !== role);
+    const ex = document.getElementById('extra-'+r);
+    if (ex) ex.classList.toggle('hidden', r !== role);
+  });
+  document.getElementById('btn-login-label').innerHTML =
+    '<span class="lbl-icon">🔐</span> ' + ROLE_LABELS[role].btn;
+  hideLoginErr();
+}
+
+function loginAs(role) {
+  switchLoginRole(role);
+  document.getElementById('login-id').value = role;
+  document.getElementById('login-pwd').value = 'demo1234';
+  handleLoginSubmit({ preventDefault: () => {} });
+}
+
+function togglePwd() {
+  const inp = document.getElementById('login-pwd');
+  const btn = document.getElementById('pwd-toggle');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('login-err');
+  document.getElementById('login-err-text').textContent = msg;
+  el.classList.add('show');
+}
+function hideLoginErr() { document.getElementById('login-err').classList.remove('show'); }
+
+function handleLoginSubmit(e) {
+  e.preventDefault();
+  hideLoginErr();
+  const id  = document.getElementById('login-id').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  if (!id)  { showLoginErr('Veuillez saisir votre identifiant.'); return; }
+  if (!pwd) { showLoginErr('Veuillez saisir votre mot de passe.'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  document.getElementById('login-spinner').style.display = 'block';
+  document.getElementById('btn-login-label').style.display = 'none';
+
+  // Simulate auth delay
+  setTimeout(() => {
+    btn.disabled = false;
+    document.getElementById('login-spinner').style.display = 'none';
+    document.getElementById('btn-login-label').style.display = '';
+    enterApp(currentLoginRole, id);
+  }, 900);
+}
+
+function enterApp(role, username) {
+  const meta = ROLE_LABELS[role];
+
+  // Rôle actif (utilisé pour les droits de modification dans le tableau Établissements)
+  window.APP_ROLE = role;
+  if (window._etabInit) renderEtabTable(etabLocalStore);
+
+  // Update sidebar role badge
+  const badge = document.getElementById('sidebar-role-badge');
+  badge.className = 'sidebar-role-badge ' + meta.badge;
+  document.getElementById('srb-text').textContent = meta.text;
+
+  // Update topbar user
+  document.getElementById('topbar-avatar').textContent = meta.avatar;
+  document.getElementById('topbar-user-name').textContent = username || meta.name;
+  document.getElementById('topbar-user-role').textContent = meta.role;
+
+  // Hide "Nouvel établissement" button for Inspector role (read-only access)
+  const newBtn = document.getElementById('etab-new-btn');
+  if (newBtn) {
+    newBtn.style.display = (role === 'inspecteur') ? 'none' : '';
+  }
+
+  // Show app, hide login
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  // Init charts if not done
+  if (!window._chartsInit) { initAllCharts(); window._chartsInit = true; }
+
+  // Init the contained 3D score orb once (canvas now has real dimensions)
+  if (!window._scoreOrbInit) { initScoreOrb(); window._scoreOrbInit = true; }
+
+  // Premium count-up animation on the dashboard KPIs / score / rings (once)
+  if (!window._countUpDone) { window._countUpDone = true; setTimeout(runCountUps, 260); }
+}
+
+/* ════════════════════════════════════════════════
+   COUNT-UP ANIMATION (premium number reveal)
+════════════════════════════════════════════════ */
+function animateCount(el, target, decimals, duration) {
+  const reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fmt = (n) => n.toFixed(decimals);
+  if (reduce || !Number.isFinite(target)) { el.textContent = fmt(target); return; }
+
+  const start = performance.now();
+  const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    el.textContent = fmt(target * easeOutExpo(p));
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = fmt(target);
+  }
+  requestAnimationFrame(step);
+}
+
+function runCountUps() {
+  // Animate any element whose text is a number: KPI cube values, ring values.
+  // Le « Score de performance » garde son animation d'origine (numberReveal).
+  const targets = [
+    ...document.querySelectorAll('#kpi-strip .kpi-cube-value-num'),
+    ...document.querySelectorAll('#rings-row .ring-val'),
+  ];
+  targets.forEach((el, i) => {
+    const raw = (el.textContent || '').trim().replace(',', '.');
+    const num = parseFloat(raw);
+    if (!Number.isFinite(num)) return;
+    const decimals = raw.includes('.') ? (raw.split('.')[1] || '').length : 0;
+    el.style.willChange = 'contents';
+    setTimeout(() => animateCount(el, num, decimals, 1100), i * 90);
+  });
+}
+
+function doLogout() {
+  if (!confirm('Déconnecter et revenir à l\'écran de connexion ?')) return;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pwd').value = '';
+  document.getElementById('login-pwd').type = 'password';
+  document.getElementById('pwd-toggle').textContent = '👁️';
+  hideLoginErr();
+}
+
+/* ════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════ */
+const API_URL = 'http://localhost:5000';
+const KPI_META = [
+  { key:'chargeHoraireProf',    label:'Charge H.',      unit:'h/prof', formula:'nb heures / nb profs',                    fullName:"Charge horaire d'enseignant",          dir:'neutral',  color:'var(--tn-red)' },
+  { key:'profQuittant',         label:'Profs quittant', unit:'nb',     formula:'nb enseignants partis',                   fullName:"Enseignants quittant l'établissement",  dir:'negative', color:'var(--bad)' },
+  { key:'activitesCulturelles', label:'Activités',      unit:'nb',     formula:'nb activités / nb matières',              fullName:"Activités culturelles et sportives",    dir:'positive', color:'var(--ok)' },
+  { key:'actesViolants',        label:'Actes violents', unit:'nb',     formula:'nb actes / nb personnes',                 fullName:"Nombre d'actes violents",               dir:'negative', color:'var(--bad)' },
+  { key:'elevesExcellent',      label:'Élèves ≥12',     unit:'%',      formula:'[score≥16 / total] × 100',                fullName:"Élèves inscrits avec score ≥ 12",       dir:'positive', color:'var(--ok)' },
+  { key:'eleveAbondonnant',     label:'Abandonnant',    unit:'nb',     formula:'nb retirés / nb total',                   fullName:"Élèves abandonnant l'établissement",    dir:'negative', color:'var(--warn)' },
+  { key:'surchargeClasse',      label:'Surcharge',      unit:'%',      formula:'(élèves / classes) × 100',                fullName:"Taux de surcharge des classes",          dir:'negative', color:'var(--warn)' },
+  { key:'reussiteGenerale',     label:'Réussite',       unit:'%',      formula:'(admis – bac) / (total – bac)',           fullName:"Pourcentage réussite générale",          dir:'positive', color:'var(--tn-red)' },
+];
+const PRESETS = {
+  // Années historiques (entraînement / comparaison)
+  y1: { chargeHoraireProf:16,    profQuittant:14, activitesCulturelles:13, actesViolants:6, elevesExcellent:12, eleveAbondonnant:55, surchargeClasse:29,   reussiteGenerale:66.49 }, // 2023
+  y2: { chargeHoraireProf:17,    profQuittant:4,  activitesCulturelles:12, actesViolants:7, elevesExcellent:11, eleveAbondonnant:57, surchargeClasse:30,   reussiteGenerale:68.52 }, // 2024
+  y3: { chargeHoraireProf:16.95, profQuittant:15, activitesCulturelles:14, actesViolants:8, elevesExcellent:12, eleveAbondonnant:69, surchargeClasse:28.2, reussiteGenerale:68    }, // 2025
+  // Année cible (hypothèses KPI pour la prévision 2026 — éditable)
+  y4: { chargeHoraireProf:16.95, profQuittant:15, activitesCulturelles:14, actesViolants:8, elevesExcellent:12, eleveAbondonnant:69, surchargeClasse:28.2, reussiteGenerale:68    }, // 2026 (cible)
+};
+const HIST = {
+  //                2017   2018   2019   2020   2021   2022   2023   2024   2025
+  years:['2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+  reussiteGenerale:    [58.20, 60.50, 61.80, 62.40, 64.10, 65.70, 66.49, 68.52, 68.00],
+  chargeHoraireProf:   [17.80, 17.50, 17.20, 16.80, 16.50, 16.20, 16.00, 17.00, 16.95],
+  profQuittant:        [9,     11,    8,     12,    10,    13,    14,    4,     15],
+  activitesCulturelles:[6,     7,     8,     9,     10,    11,    13,    12,    14],
+  actesViolants:       [3,     4,     4,     5,     5,     6,     6,     7,     8],
+  elevesExcellent:     [8,     9,     9,     10,    10,    11,    12,    11,    12],
+  eleveAbondonnant:    [40,    43,    46,    48,    50,    52,    55,    57,    69],
+  surchargeClasse:     [24.0,  25.0,  26.0,  27.0,  28.0,  29.0,  29.0,  30.0,  28.20],
+  pourcentageSucces:   [47.83, 26.88, 37.01, 32.43, 31.00, 50.39, 42.19, 38.41, 44.50],
+};
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.font.family = 'Inter';
+const gridColor = 'rgba(15, 23, 42, 0.06)';
+const tickColor = '#64748b';
+
+const PAGE_ORDER  = ['dashboard','analytics','prediction','historique','lexique'];
+const PAGE_LABELS = { dashboard:'Tableau de bord', analytics:'Analyse', prediction:'Prédiction', historique:'Historique', lexique:'Lexique KPI' };
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const idx = PAGE_ORDER.indexOf(id);
+  if (idx >= 0) document.querySelectorAll('.nav-item')[idx].classList.add('active');
+  const bc = document.getElementById('breadcrumb-current');
+  if (bc) bc.textContent = PAGE_LABELS[id] || '';
+  if (id === 'analytics' && !window._analyticsInit) { initAnalyticsCharts(); window._analyticsInit = true; }
+  if (id === 'historique' && !window._histInit)     { initHistCharts();     window._histInit = true; }
+}
+
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+/* ════════════════════════════════════════════════
+   KPI CUBES
+════════════════════════════════════════════════ */
+const KPI_DATA = [
+  // Valeurs = dernière année observée (2025) ; delta = variation vs 2024.
+  // Couleur du badge = sentiment (vert=bon / rouge=mauvais), flèche = sens réel.
+  { icon:'📈', label:'Taux de réussite',   value:68,    unit:'%',     delta:{dir:'down', text:'▼ 0.52 pts'}, sub:'vs 2024', color:'var(--tn-red)', bg:'var(--tn-red-soft)', spark:[66.49,68.52,68],  sparkColor:'#E70013' },
+  { icon:'⚠️', label:"Abandons d'élèves", value:69,    unit:'cas',   delta:{dir:'down', text:'▲ +21 %'},   sub:'vs 2024', color:'var(--bad)',    bg:'var(--bad-soft)',    spark:[55,57,69],         sparkColor:'#b91c1c' },
+  { icon:'👥', label:'Charge moyenne',     value:16.95, unit:'h',     delta:{dir:'flat', text:'→ Stable'},   sub:'vs 2024', color:'var(--ok)',     bg:'var(--ok-soft)',     spark:[16,17,16.95],      sparkColor:'#047857' },
+  { icon:'🚨', label:'Incidents violents', value:8,     unit:'actes', delta:{dir:'down', text:'▲ +14 %'},   sub:'vs 2024', color:'var(--warn)',   bg:'var(--warn-soft)',   spark:[6,7,8],            sparkColor:'#b45309' },
+];
+
+function buildKpiCubes() {
+  const strip = document.getElementById('kpi-strip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  KPI_DATA.forEach((kpi, i) => {
+    const cube = document.createElement('div');
+    cube.className = 'kpi-cube';
+    cube.style.setProperty('--accent-color', kpi.color);
+    cube.style.setProperty('--accent-bg', kpi.bg);
+    cube.innerHTML = `
+      <div class="kpi-cube-face">
+        <div class="kpi-cube-top">
+          <div class="kpi-cube-icon">${kpi.icon}</div>
+          <div class="kpi-cube-label">${kpi.label}</div>
+        </div>
+        <div class="kpi-cube-value">
+          <span class="kpi-cube-value-num">${kpi.value}</span>
+          <span class="kpi-cube-unit">${kpi.unit}</span>
+        </div>
+        <div class="kpi-cube-delta">
+          <span class="delta-badge badge-${kpi.delta.dir}">${kpi.delta.text}</span>
+          <span>${kpi.sub}</span>
+        </div>
+      </div>
+      <div class="kpi-cube-back" style="background:linear-gradient(135deg,${kpi.color} 0%,var(--tn-red-dark) 100%)">
+        <div class="kpi-cube-back-label">Tendance</div>
+        <div class="kpi-cube-back-value">${kpi.value}<small>${kpi.unit}</small></div>
+        <div class="kpi-cube-back-spark"><canvas id="cube-spark-${i}"></canvas></div>
+      </div>
+    `;
+    strip.appendChild(cube);
+    cube.addEventListener('mousemove', (e) => {
+      const rect = cube.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top)  / rect.height;
+      cube.style.transform = `rotateY(${(x-0.5)*22}deg) rotateX(${-(y-0.5)*16}deg) translateZ(0)`;
+    });
+    cube.addEventListener('mouseleave', () => { cube.style.transform='rotateY(0deg) rotateX(0deg) translateZ(0)'; });
+    setTimeout(() => {
+      const sc = document.getElementById('cube-spark-'+i);
+      if (!sc) return;
+      new Chart(sc.getContext('2d'), {
+        type:'line',
+        data:{ labels:kpi.spark.map((_,j)=>j), datasets:[{ data:kpi.spark, borderColor:'rgba(255,255,255,0.95)', backgroundColor:'rgba(255,255,255,0.12)', borderWidth:2, fill:true, tension:0.4, pointRadius:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:700,easing:'easeOutQuart'} }
+      });
+    }, 120);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   INIT ALL CHARTS (called after login)
+════════════════════════════════════════════════ */
+function initAllCharts() {
+  buildKpiCubes();
+
+  new Chart(document.getElementById('chart-main-trend').getContext('2d'), {
+    type:'line',
+    data:{
+      labels:HIST.years,
+      datasets:[
+        { label:'Réussite générale %', data:HIST.reussiteGenerale, borderColor:'rgba(231,0,19,.9)', borderWidth:2, backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,ctx.chart.height); g.addColorStop(0,'rgba(231,0,19,.12)'); g.addColorStop(1,'rgba(231,0,19,0)'); return g; }, fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#E70013', pointBorderColor:'#fff', pointBorderWidth:2, spanGaps:true },
+        { label:'Perf. examens %', data:HIST.pourcentageSucces, borderColor:'rgba(29,78,216,.8)', borderWidth:1.5, backgroundColor:'transparent', tension:0.4, pointRadius:3, pointBackgroundColor:'#1d4ed8', borderDash:[5,3], spanGaps:true }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:tickColor,boxWidth:12,font:{size:11,weight:'500'}}}}, scales:{x:{grid:{color:gridColor,display:false},ticks:{color:tickColor}},y:{grid:{color:gridColor},ticks:{color:tickColor},min:0,max:80}}, animation:{duration:900,easing:'easeOutQuart'} }
+  });
+
+  new Chart(document.getElementById('chart-radar-main').getContext('2d'), {
+    type:'radar',
+    data:{
+      labels:['Charge H.','Activités','Élèves ≥12','Réussite %','Non-abandon','Non-surcharge'],
+      datasets:[
+        { label:'2023', data:[16,13,12,66.49,45,71], borderColor:'rgba(231,0,19,.7)', backgroundColor:'rgba(231,0,19,.05)', pointBackgroundColor:'#E70013', borderWidth:1.5, pointRadius:3 },
+        { label:'2024', data:[17,12,11,68.52,43,70], borderColor:'rgba(29,78,216,.7)', backgroundColor:'rgba(29,78,216,.05)', pointBackgroundColor:'#1d4ed8', borderWidth:1.5, pointRadius:3 },
+        { label:'2025', data:[16.95,14,12,68,31,71.8], borderColor:'rgba(180,83,9,.7)', backgroundColor:'rgba(180,83,9,.05)', pointBackgroundColor:'#b45309', borderWidth:1.5, pointRadius:3 },
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:tickColor,boxWidth:12,font:{size:10,weight:'500'}}}}, scales:{r:{grid:{color:'rgba(15,23,42,.06)'},ticks:{display:false},pointLabels:{color:tickColor,font:{size:10,weight:'500'}}}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+
+  new Chart(document.getElementById('chart-bar-perf').getContext('2d'), {
+    type:'bar',
+    data:{
+      labels:['2017','2018','2019','2020','2021','2022','2023','2024'],
+      datasets:[{ label:'Perf. examens %', data:[47.83,26.88,37.01,32.43,31,50.39,42.19,38.41], backgroundColor:[47.83,26.88,37.01,32.43,31,50.39,42.19,38.41].map(v=>v>=45?'rgba(4,120,87,.75)':v>=35?'rgba(180,83,9,.75)':'rgba(185,28,28,.75)'), borderRadius:4 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor,display:false},ticks:{color:tickColor}},y:{grid:{color:gridColor},ticks:{color:tickColor},min:0,max:60}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+
+  (function buildRings() {
+    const rings = [
+      { label:'Réussite',  value:68.52, max:100, color:'#E70013' },
+      { label:'Activités', value:14,    max:20,  color:'#047857' },
+      { label:'Excellents',value:12,    max:30,  color:'#1d4ed8' },
+    ];
+    const row = document.getElementById('rings-row');
+    rings.forEach((r,i) => {
+      const circ = 2*Math.PI*36;
+      const offset = circ*(1-(r.value/r.max));
+      const div = document.createElement('div');
+      div.className = 'ring-wrap';
+      div.innerHTML = `
+        <svg class="ring-svg" width="80" height="80" viewBox="0 0 86 86">
+          <circle class="ring-track" cx="43" cy="43" r="36" stroke-width="7"/>
+          <circle class="ring-fill" cx="43" cy="43" r="36" stroke-width="7" stroke="${r.color}" stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-offset="${offset}"/>
+        </svg>
+        <div class="ring-val">${r.value}</div>
+        <div class="ring-name">${r.label}</div>
+      `;
+      row.appendChild(div);
+      setTimeout(() => { div.querySelector('.ring-fill').style.strokeDashoffset = offset; }, 200+i*120);
+    });
+  })();
+
+  // Prediction form
+  buildKpiGrid('kpi-y1','y1');
+  buildKpiGrid('kpi-y2','y2');
+  buildKpiGrid('kpi-y3','y3');
+  buildKpiGrid('kpi-y4','y4');
+
+  window.methodChart = new Chart(document.getElementById('chart-method-compare').getContext('2d'), {
+    type:'bar',
+    data:{ labels:['Linéaire','Ridge','Réseau neuronal'], datasets:[{ label:'Prédiction %', data:[0,0,0], backgroundColor:['rgba(180,83,9,.7)','rgba(29,78,216,.7)','rgba(231,0,19,.8)'], borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor,display:false},ticks:{color:tickColor,font:{weight:'500'}}},y:{grid:{color:gridColor},ticks:{color:tickColor},min:0,max:100}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+
+  // Lexique
+  buildLexique();
+}
+
+function initAnalyticsCharts() {
+  new Chart(document.getElementById('chart-scatter').getContext('2d'), {
+    type:'scatter',
+    data:{ datasets:[{ label:'Abandons vs Réussite', data:[{x:55,y:66.49},{x:57,y:68.52},{x:69,y:68}], backgroundColor:'rgba(231,0,19,.75)', pointRadius:10, pointHoverRadius:14, borderColor:'#fff', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:tickColor}},tooltip:{callbacks:{label:c=>`Abandons:${c.parsed.x} → Réussite:${c.parsed.y}%`}}}, scales:{x:{grid:{color:gridColor},ticks:{color:tickColor},title:{display:true,text:'Élèves abandonnant',color:tickColor,font:{weight:'500'}}},y:{grid:{color:gridColor},ticks:{color:tickColor},title:{display:true,text:'Réussite %',color:tickColor,font:{weight:'500'}},min:60,max:75}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+  new Chart(document.getElementById('chart-profs').getContext('2d'), {
+    type:'bar',
+    data:{ labels:['2023','2024','2025'], datasets:[{ label:'Enseignants quittants', data:[14,4,15], backgroundColor:['rgba(185,28,28,.7)','rgba(4,120,87,.7)','rgba(185,28,28,.7)'], borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor,display:false},ticks:{color:tickColor}},y:{grid:{color:gridColor},ticks:{color:tickColor},min:0,max:20}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+  [['chart-doughnut-22',[66.49,12,29,6]],['chart-doughnut-23',[68.52,11,30,7]],['chart-doughnut-24',[68,12,28,8]]].forEach(([id,data]) => {
+    new Chart(document.getElementById(id).getContext('2d'), {
+      type:'doughnut',
+      data:{ labels:['Réussite','Excellents','Surcharge','Violence'], datasets:[{ data, backgroundColor:['rgba(231,0,19,.75)','rgba(4,120,87,.75)','rgba(180,83,9,.75)','rgba(185,28,28,.75)'], borderWidth:2, borderColor:'#fff' }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{legend:{labels:{color:tickColor,boxWidth:10,font:{size:10,weight:'500'}}}}, animation:{duration:800,easing:'easeOutQuart'} }
+    });
+  });
+  new Chart(document.getElementById('chart-stacked').getContext('2d'), {
+    type:'bar',
+    data:{ labels:['2023','2024','2025'], datasets:[
+      { label:'Réussite',   data:[66.49,68.52,68], backgroundColor:'rgba(231,0,19,.7)',  borderRadius:{topLeft:4,topRight:4} },
+      { label:'Excellents', data:[12,11,12],        backgroundColor:'rgba(4,120,87,.7)',  borderRadius:0 },
+      { label:'Activités',  data:[13,12,14],        backgroundColor:'rgba(29,78,216,.7)', borderRadius:0 },
+      { label:'Abandons/3', data:[18.3,19,23],      backgroundColor:'rgba(185,28,28,.6)', borderRadius:0 },
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:tickColor,boxWidth:12,font:{weight:'500'}}}}, scales:{x:{stacked:true,grid:{color:gridColor,display:false},ticks:{color:tickColor}},y:{stacked:true,grid:{color:gridColor},ticks:{color:tickColor}}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+}
+
+function initHistCharts() {
+  new Chart(document.getElementById('chart-hist-long').getContext('2d'), {
+    type:'line',
+    data:{ labels:HIST.years, datasets:[
+      { label:'Réussite générale', data:HIST.reussiteGenerale, borderColor:'rgba(231,0,19,.9)', borderWidth:2, fill:false, tension:0.4, pointRadius:4, pointBackgroundColor:'#E70013', spanGaps:true },
+      { label:'Perf. examens',     data:HIST.pourcentageSucces, borderColor:'rgba(29,78,216,.8)', borderWidth:1.5, fill:false, tension:0.4, borderDash:[5,3], pointBackgroundColor:'#1d4ed8', spanGaps:true },
+      { label:'Abandons',          data:HIST.eleveAbondonnant, borderColor:'rgba(185,28,28,.7)', borderWidth:1.5, fill:false, tension:0.4, pointBackgroundColor:'#b91c1c', spanGaps:true, yAxisID:'y2' },
+    ] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:tickColor,boxWidth:12,font:{weight:'500'}}}}, scales:{x:{grid:{color:gridColor},ticks:{color:tickColor}},y:{grid:{color:gridColor},ticks:{color:tickColor},min:0,max:80,title:{display:true,text:'%',color:tickColor,font:{weight:'500'}}},y2:{position:'right',grid:{display:false},ticks:{color:tickColor},title:{display:true,text:'nb',color:tickColor,font:{weight:'500'}}}}, animation:{duration:800,easing:'easeOutQuart'} }
+  });
+  const fields=[
+    {k:'reussiteGenerale',l:'Réussite générale (%)'},{k:'pourcentageSucces',l:'Perf. examens (%)'},
+    {k:'chargeHoraireProf',l:'Charge horaire'},{k:'profQuittant',l:'Profs quittants'},
+    {k:'activitesCulturelles',l:'Activités culturelles'},{k:'actesViolants',l:'Actes violents'},
+    {k:'elevesExcellent',l:'Élèves excellents'},{k:'eleveAbondonnant',l:'Élèves abandonnant'},
+    {k:'surchargeClasse',l:'Surcharge classes (%)'},
+  ];
+  const t = document.getElementById('hist-table-full');
+  let h = `<thead><tr><th>KPI</th>${HIST.years.map(y=>`<th class="num">${y}</th>`).join('')}</tr></thead><tbody>`;
+  fields.forEach(f => {
+    const vals = HIST[f.k] || [];
+    h += `<tr><td>${f.l}</td>${HIST.years.map((_,i)=>{ const v=vals[i]; return `<td class="num">${v!=null?v:'<span style="color:var(--text-4)">—</span>'}</td>`; }).join('')}</tr>`;
+  });
+  t.innerHTML = h + '</tbody>';
+  const events=[
+    { yr:'2025', title:'Hausse abandons et violence', stats:[{k:'Abandons',v:'69 (+21%)'},{k:'Actes violents',v:'8 (+33%)'},{k:'Charge H.',v:'16.95 h'}] },
+    { yr:'2024', title:'Pic de réussite — baisse des quittants', stats:[{k:'Réussite',v:'68.52%'},{k:'Profs quittants',v:'4 → record bas'},{k:'Perf. examens',v:'38.41%'}] },
+    { yr:'2023', title:'Première collecte KPI complète', stats:[{k:'Réussite',v:'66.49%'},{k:'Abandons',v:'55 élèves'},{k:'Actes',v:'6'}] },
+  ];
+  document.getElementById('timeline-wrap').innerHTML = events.map(e=>`
+    <div class="timeline-item">
+      <div class="timeline-year">${e.yr}</div>
+      <div class="timeline-content">
+        <div class="timeline-title">${e.title}</div>
+        <div class="timeline-stats">${e.stats.map(s=>`<div class="timeline-stat">${s.k}: <span>${s.v}</span></div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+
+function buildLexique() {
+  const colors=['var(--tn-red)','var(--bad)','var(--ok)','var(--bad)','var(--ok)','var(--warn)','var(--warn)','var(--tn-red)'];
+  const grid = document.getElementById('lex-grid');
+  KPI_META.forEach((k,i) => {
+    const dirLabel = k.dir==='positive'?'↑ Indicateur positif':k.dir==='negative'?'↓ Indicateur négatif':'↔ Neutre';
+    const dirClass = k.dir==='positive'?'dir-pos':k.dir==='negative'?'dir-neg':'dir-neu';
+    const d = document.createElement('div');
+    d.className = 'lex-card'; d.style.setProperty('--lx-color', colors[i]);
+    d.innerHTML = `<div class="lex-abbr">${k.key}</div><div class="lex-name">${k.fullName}</div><div class="lex-formula">${k.formula}</div><div class="lex-unit">Unité : <strong style="color:var(--text)">${k.unit}</strong></div><div class="lex-direction ${dirClass}">${dirLabel}</div>`;
+    grid.appendChild(d);
+  });
+}
+
+function buildKpiGrid(containerId, yearKey) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  // Les années historiques (2023, 2024, 2025) sont des données observées : on les
+  // verrouille pour qu'elles restent constantes. Seule l'année cible (y4 = 2026)
+  // est éditable — c'est l'hypothèse à partir de laquelle le modèle prédit.
+  const locked = yearKey !== 'y4';
+  KPI_META.forEach(k => {
+    const val = PRESETS[yearKey][k.key];
+    const div = document.createElement('div');
+    div.className = 'kpi-field';
+    const lockAttrs = locked ? ' readonly tabindex="-1"' : '';
+    const lockClass = locked ? ' locked' : '';
+    div.innerHTML = `<label title="${k.formula}">${k.label} (${k.unit})</label><input type="number" id="${k.key}-${yearKey}" step="0.01" value="${val!==undefined?val:''}"${lockAttrs} class="${val!==undefined?'prefilled':''}${lockClass}" oninput="this.classList.remove('prefilled','err-field')">`;
+    el.appendChild(div);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   PREDICTION
+════════════════════════════════════════════════ */
+function getRow(yk) { return KPI_META.map(k => parseFloat(document.getElementById(k.key+'-'+yk).value)); }
+function showErr(msg) { const b=document.getElementById('err-bar'); document.getElementById('err-text').textContent=msg; b.classList.add('show'); }
+function hideErr() { document.getElementById('err-bar').classList.remove('show'); }
+
+async function checkAPI() {
+  try {
+    const r = await fetch(API_URL+'/health', { signal:AbortSignal.timeout(2500) });
+    const ok = r.ok;
+    const badge = document.getElementById('api-badge');
+    badge.className='api-pill '+(ok?'ok':'err');
+    badge.innerHTML=`<div class="api-dot"></div><span class="api-text">${ok?'API connectée':'API hors ligne'}</span>`;
+    return ok;
+  } catch {
+    const badge=document.getElementById('api-badge');
+    badge.className='api-pill err';
+    badge.innerHTML='<div class="api-dot"></div><span class="api-text">API hors ligne</span>';
+    return false;
+  }
+}
+
+function localFallback(rows,succ,target) {
+  // rows: historiques (2023,2024,2025), succ: leurs taux, target: hypothèses 2026
+  const w=[-0.1,-0.3,0.15,-0.25,0.2,-0.3,-0.15,0.5];
+  const n=succ.length;
+  const last=rows[n-1], prev=rows[n-2]||rows[n-1];
+  const base=succ[n-1];                          // dernière année connue (2025)
+  const trend=n>=2 ? succ[n-1]-succ[n-2] : 0;     // tendance récente (2025 − 2024)
+  let adj=0;
+  for(let i=0;i<target.length;i++){
+    const cRecent=(target[i]-last[i])/(Math.abs(last[i])+0.001);
+    const cPrev=(last[i]-prev[i])/(Math.abs(prev[i])+0.001);
+    adj+=w[i]*(cRecent*0.7+cPrev*0.3)*base;
+  }
+  return Math.max(0,Math.min(100,Math.round((base+trend*0.5+adj*0.08)*100)/100));
+}
+
+async function runPrediction() {
+  hideErr();
+  // Trois années historiques (2023, 2024, 2025) + hypothèses cible 2026
+  const r1=getRow('y1'),r2=getRow('y2'),r3=getRow('y3'),r4=getRow('y4');
+  const s1=parseFloat(document.getElementById('succ-y1').value);
+  const s2=parseFloat(document.getElementById('succ-y2').value);
+  const s3=parseFloat(document.getElementById('succ-y3').value);
+  if(r1.some(isNaN)||r2.some(isNaN)||r3.some(isNaN)||r4.some(isNaN)){showErr('Complétez tous les champs KPI.');return;}
+  if(isNaN(s1)||isNaN(s2)||isNaN(s3)){showErr('Saisissez les taux de réussite pour les 3 années historiques (2023, 2024, 2025).');return;}
+  const hist=[r1,r2,r3], succ=[s1,s2,s3];
+  const btn=document.getElementById('btn-predict');
+  btn.disabled=true; btn.classList.add('loading');
+  document.getElementById('before-result').style.display='none';
+  document.getElementById('result-inner').classList.add('show');
+  let pred,lin=null,ridge=null;
+  const apiOk=await checkAPI();
+  if(apiOk){
+    const body={criteria_values:hist,success_percentages:succ,next_year_criteria:r4};
+    // Les deux appels tournent EN PARALLÈLE (au lieu d'en série) → temps d'attente
+    // proche du plus long appel, et non de la somme des deux.
+    const pPredict = fetch(API_URL+'/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)})
+      .then(r=>r.json()).then(d=>{ if(d.error) throw new Error(d.error); return d.prediction; })
+      .catch(()=>localFallback(hist,succ,r4));
+    const pCompare = fetch(API_URL+'/predict/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)})
+      .then(r=>r.json()).then(d=>({lin:d.models?.linear?.prediction, ridge:d.models?.ridge?.prediction}))
+      .catch(()=>({lin:null,ridge:null}));
+    const [predVal, cmp] = await Promise.all([pPredict, pCompare]);
+    pred=predVal; lin=cmp.lin; ridge=cmp.ridge;
+  } else {
+    await new Promise(r=>setTimeout(r,500));
+    pred=localFallback(hist,succ,r4);
+  }
+  btn.disabled=false; btn.classList.remove('loading');
+  window.methodChart.data.datasets[0].data=[lin||pred*0.95,ridge||pred,pred];
+  window.methodChart.update();
+  displayResult(pred,s1,s2,s3);
+}
+
+function displayResult(pred,s1,s2,s3) {
+  document.getElementById('res-score').innerHTML=pred.toFixed(2)+'<span class="result-score-unit">%</span>';
+  document.getElementById('cmp-y1').textContent=s1.toFixed(2)+'%';
+  document.getElementById('cmp-y2').textContent=s2.toFixed(2)+'%';
+  document.getElementById('cmp-y3').textContent=s3.toFixed(2)+'%';
+  document.getElementById('cmp-y4').textContent=pred.toFixed(2)+'%';
+  // Deltas année par année : 2024 vs 2023, 2025 vs 2024, 2026(IA) vs 2025
+  const dly = (cur,prev) => `<span class="${cur-prev>=0?'trend-up':'trend-down'}">${cur-prev>=0?'▲':'▼'} ${Math.abs(cur-prev).toFixed(2)} pts</span>`;
+  document.getElementById('cdelta-y1').innerHTML=`<span class="trend-flat">référence</span>`;
+  document.getElementById('cdelta-y2').innerHTML=dly(s2,s1);
+  document.getElementById('cdelta-y3').innerHTML=dly(s3,s2);
+  document.getElementById('cdelta-trend').innerHTML=`<span class="${pred-s3>=0?'trend-up':'trend-down'}">${pred-s3>=0?'Hausse':'Baisse'} vs 2025</span>`;
+  document.getElementById('gauge-arc-fill').style.strokeDashoffset=376*(1-pred/100);
+  const levels=[{min:75,label:'Excellent',cls:'badge-green'},{min:65,label:'Satisfaisant',cls:'badge-neon'},{min:50,label:'À surveiller',cls:'badge-amber'},{min:0,label:'Critique',cls:'badge-red'}];
+  const lv=levels.find(l=>pred>=l.min)||levels[levels.length-1];
+  document.getElementById('res-badge').innerHTML=`<span class="badge ${lv.cls}">${lv.label}</span>`;
+  const interpMap={
+    75:`<strong>Trajectoire excellente.</strong> Indicateurs favorables — réussite projetée nettement au-dessus de la moyenne nationale.`,
+    65:`<strong>Niveau satisfaisant.</strong> Dynamique positive mais fragile. Surveiller la hausse des abandons et la surcharge des classes.`,
+    50:`<strong>Vigilance requise.</strong> Plusieurs indicateurs de risque se cumulent. Plan d'action ciblé recommandé.`,
+    0:`<strong>Niveau préoccupant.</strong> Tensions structurelles significatives. Intervention urgente nécessaire.`,
+  };
+  const key=pred>=75?75:pred>=65?65:pred>=50?50:0;
+  document.getElementById('res-interp').innerHTML=interpMap[key];
+}
+
+// Check API on load
+window.addEventListener('load', () => { checkAPI(); });
+
+/* ════════════════════════════════════════════════
+   PREDICTION — overlay de chargement dynamique (UX)
+   Pilotée par l'état .loading du bouton (aucune modif
+   de la logique de prédiction).
+════════════════════════════════════════════════ */
+(function setupPredLoading() {
+  const btn   = document.getElementById('btn-predict');
+  const panel = document.getElementById('pred-loading');
+  const msgEl = document.getElementById('pred-loading-msg');
+  if (!btn || !panel || !msgEl) return;
+
+  const MESSAGES = [
+    'Veuillez patienter…',
+    'Analyse des données…',
+    'Traitement des indicateurs KPI…',
+    'Calcul des tendances futures…',
+    'Génération des prévisions…',
+    'Validation des résultats…',
+    'Finalisation de l\'analyse…',
+    'Préparation des résultats de prédiction…',
+  ];
+  const ROTATE_MS = 2400;
+  let idx = 0, timer = null;
+
+  function setMessage(text) {
+    msgEl.classList.add('fade-out');
+    setTimeout(() => {
+      msgEl.textContent = text;
+      msgEl.classList.remove('fade-out');
+    }, 320);
+  }
+
+  function start() {
+    idx = 0;
+    msgEl.textContent = MESSAGES[0];
+    panel.classList.add('show');
+    panel.setAttribute('aria-busy', 'true');
+    clearInterval(timer);
+    timer = setInterval(() => {
+      idx = (idx + 1) % MESSAGES.length;
+      setMessage(MESSAGES[idx]);
+    }, ROTATE_MS);
+  }
+
+  function stop() {
+    clearInterval(timer);
+    timer = null;
+    panel.classList.remove('show');
+    panel.setAttribute('aria-busy', 'false');
+  }
+
+  // Observe la classe .loading du bouton (ajoutée/retirée par runPrediction)
+  let wasLoading = btn.classList.contains('loading');
+  new MutationObserver(() => {
+    const isLoading = btn.classList.contains('loading');
+    if (isLoading === wasLoading) return;
+    wasLoading = isLoading;
+    if (isLoading) start();
+    else setTimeout(stop, 250); // laisse le résultat apparaître en douceur
+  }).observe(btn, { attributes: true, attributeFilter: ['class'] });
+})();
+
+/* ════════════════════════════════════════════════
+   ETABLISSEMENTS — JavaScript
+════════════════════════════════════════════════ */
+
+// Store in memory when DB is offline
+let etabLocalStore = [];
+
+// ── Navigation update : add etablissements to PAGE_ORDER ──────────────────
+const PAGE_ORDER_EXT  = ['dashboard','analytics','prediction','historique','lexique','etablissements','assistant'];
+const PAGE_LABELS_EXT = Object.assign({}, PAGE_LABELS, { etablissements: 'Établissements', assistant: 'Assistant' });
+
+// Override showPage to handle the new page
+const _originalShowPage = showPage;
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if (!pg) return;
+  pg.classList.add('active');
+  const idx = PAGE_ORDER_EXT.indexOf(id);
+  if (idx >= 0 && document.querySelectorAll('.nav-item')[idx]) {
+    document.querySelectorAll('.nav-item')[idx].classList.add('active');
+  }
+  const bc = document.getElementById('breadcrumb-current');
+  if (bc) bc.textContent = PAGE_LABELS_EXT[id] || '';
+  if (id === 'analytics'     && !window._analyticsInit) { initAnalyticsCharts(); window._analyticsInit = true; }
+  if (id === 'historique'    && !window._histInit)      { initHistCharts();      window._histInit = true; }
+  if (id === 'etablissements' && !window._etabInit)     { loadEtablissements();  window._etabInit = true; }
+  if (id === 'assistant'      && !window._assistInit)   { initAssistant();       window._assistInit = true; }
+}
+
+// ── Load list from API ────────────────────────────────────────────────────
+async function loadEtablissements() {
+  try {
+    const res  = await fetch(API_URL + '/etablissements', { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    etabLocalStore = data.etablissements || [];
+  } catch (e) {
+    // Offline — use local store
+  }
+  renderEtabTable(etabLocalStore);
+}
+
+// ── Sécurité : échappement HTML (prévention XSS) ──────────────────────────
+function escHtml(v) {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── Render table ──────────────────────────────────────────────────────────
+function renderEtabTable(rows) {
+  const badge = document.getElementById('etab-count-badge');
+  if (badge) badge.textContent = rows.length + ' établissement(s)';
+
+  const container = document.getElementById('etab-table-container');
+  if (!container) return;
+
+  if (!rows.length) {
+    const role = window.APP_ROLE || 'admin';
+    const emptyHint = (role === 'inspecteur')
+      ? 'Aucune donnée disponible pour le moment.'
+      : 'Cliquez sur « Nouvel établissement » pour commencer.';
+    container.innerHTML = `
+      <div class="etab-empty">
+        <div class="etab-empty-icon">🏫</div>
+        <div>Aucun établissement enregistré.</div>
+        <div style="font-size:12px;margin-top:6px;color:var(--text-4);">${emptyHint}</div>
+      </div>`;
+    return;
+  }
+
+  let html = `<table class="etab-table">
+    <thead><tr>
+      <th>#</th>
+      <th>Établissement</th>
+      <th>Identifiant</th>
+      <th class="num">Charge H.</th>
+      <th class="num">Profs quit.</th>
+      <th class="num">Activités</th>
+      <th class="num">Violence</th>
+      <th class="num">Élèves≥12</th>
+      <th class="num">Abandons</th>
+      <th class="num">Surcharge</th>
+      <th class="num">Réussite%</th>
+      <th class="num">Prédiction</th>
+      <th>Date saisie</th>
+      <th>Actions</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const pred = r.prediction_kpi;
+    let predHtml = '—';
+    if (pred !== null && pred !== undefined) {
+      const cls = pred >= 75 ? 'pred-excellent' : pred >= 65 ? 'pred-satisfait' : pred >= 50 ? 'pred-vigilance' : 'pred-critique';
+      const lbl = pred >= 75 ? '★ Excellent'    : pred >= 65 ? '✓ Satisfaisant'  : pred >= 50 ? '⚠ Vigilance'    : '✗ Critique';
+      predHtml = `<span class="etab-pred-pill ${cls}">${pred.toFixed(2)}% ${lbl}</span>`;
+    }
+    const date = r.date_saisie ? (r.date_saisie.split('T')[0] || r.date_saisie.substring(0, 10)) : '—';
+    const fv = (v) => (v !== null && v !== undefined && v !== '') ? escHtml(v) : '—';
+    const idAttr = escHtml(r.identifiant);
+
+    // Seul l'administrateur peut modifier / supprimer ; les autres rôles sont en lecture seule.
+    const isAdmin = (window.APP_ROLE || 'admin') === 'admin';
+    const actions = isAdmin
+      ? `<button class="etab-action-btn" data-action="edit" data-id="${idAttr}" title="Modifier cet établissement">✏️ Modifier</button>
+         <button class="etab-action-btn del" data-action="delete" data-id="${idAttr}" title="Supprimer">🗑️</button>`
+      : `<span class="etab-readonly" title="Modification réservée à l'administrateur">🔒 Lecture seule</span>`;
+
+    html += `<tr>
+      <td class="col-idx">${i+1}</td>
+      <td class="etab-name">${escHtml(r.nom_etablissement)}</td>
+      <td><span class="etab-id">${escHtml(r.identifiant)}</span></td>
+      <td class="num">${fv(r.charge_horaire_prof)}</td>
+      <td class="num">${fv(r.prof_quittant)}</td>
+      <td class="num">${fv(r.activites_culturelles)}</td>
+      <td class="num">${fv(r.actes_violants)}</td>
+      <td class="num">${fv(r.eleves_excellent)}</td>
+      <td class="num">${fv(r.eleve_abondonnant)}</td>
+      <td class="num">${fv(r.surcharge_classe)}</td>
+      <td class="num">${fv(r.reussite_generale)}</td>
+      <td class="num">${predHtml}</td>
+      <td class="col-date">${escHtml(date)}</td>
+      <td class="col-actions">${actions}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // Liaison sécurisée des actions (pas d'interpolation dans onclick → anti-XSS)
+  container.querySelectorAll('button[data-action]').forEach(btn => {
+    const id = btn.getAttribute('data-id');
+    if (btn.getAttribute('data-action') === 'edit') {
+      btn.addEventListener('click', () => editEtab(id));
+    } else {
+      const row = etabLocalStore.find(r => r.identifiant === id);
+      btn.addEventListener('click', () => deleteEtab(id, row ? row.nom_etablissement : id));
+    }
+  });
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────
+function filterEtab(query) {
+  const q = query.toLowerCase();
+  const filtered = etabLocalStore.filter(r =>
+    r.nom_etablissement.toLowerCase().includes(q) ||
+    r.identifiant.toLowerCase().includes(q)
+  );
+  renderEtabTable(filtered);
+}
+
+// ── Modal open / close ────────────────────────────────────────────────────
+function openEtabModal(prefill) {
+  // Block Inspector role from opening the modal (read-only access)
+  const role = window.APP_ROLE || 'admin';
+  if (role === 'inspecteur') {
+    return; // Silently prevent modal from opening
+  }
+
+  clearModal();
+  document.getElementById('modal-etab-title').textContent = 'Nouvel établissement';
+  if (prefill) {
+    document.getElementById('modal-etab-title').textContent = 'Modifier l\'établissement';
+    document.getElementById('m-nom').value      = prefill.nom_etablissement || '';
+    document.getElementById('m-id').value       = prefill.identifiant || '';
+    document.getElementById('m-region').value   = prefill.region || '';
+    document.getElementById('m-type').value     = prefill.type_etablissement || '';
+    document.getElementById('m-adresse').value  = prefill.adresse || '';
+    document.getElementById('m-charge').value   = prefill.charge_horaire_prof ?? '';
+    document.getElementById('m-profs').value    = prefill.prof_quittant ?? '';
+    document.getElementById('m-activ').value    = prefill.activites_culturelles ?? '';
+    document.getElementById('m-violence').value = prefill.actes_violants ?? '';
+    document.getElementById('m-excellent').value= prefill.eleves_excellent ?? '';
+    document.getElementById('m-abandon').value  = prefill.eleve_abondonnant ?? '';
+    document.getElementById('m-surcharge').value= prefill.surcharge_classe ?? '';
+    document.getElementById('m-reussite').value = prefill.reussite_generale ?? '';
+    document.getElementById('m-pred').value     = prefill.prediction_kpi ?? '';
+  }
+  document.getElementById('etab-modal').classList.add('open');
+}
+
+function closeEtabModal() {
+  document.getElementById('etab-modal').classList.remove('open');
+  clearModal();
+}
+
+function clearModal() {
+  ['m-nom','m-id','m-region','m-type','m-adresse','m-charge','m-profs','m-activ','m-violence',
+   'm-excellent','m-abandon','m-surcharge','m-reussite','m-pred'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('modal-err').classList.remove('show');
+  document.getElementById('modal-success').classList.remove('show');
+}
+
+// Close on overlay click
+document.getElementById('etab-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEtabModal();
+});
+
+// ── Edit ──────────────────────────────────────────────────────────────────
+function editEtab(identifiant) {
+  const row = etabLocalStore.find(r => r.identifiant === identifiant);
+  if (row) openEtabModal(row);
+}
+
+// ── Auto-predict via API ──────────────────────────────────────────────────
+// Lit les 8 KPI du modal et renvoie la prédiction (nombre [0,100]) calculée
+// par l'API /predict, avec repli sur une estimation locale si l'API est
+// indisponible. Renvoie null si les 8 KPI ne sont pas tous renseignés.
+async function computeEtabPrediction() {
+  const vals = [
+    parseFloat(document.getElementById('m-charge').value),
+    parseFloat(document.getElementById('m-profs').value),
+    parseFloat(document.getElementById('m-activ').value),
+    parseFloat(document.getElementById('m-violence').value),
+    parseFloat(document.getElementById('m-excellent').value),
+    parseFloat(document.getElementById('m-abandon').value),
+    parseFloat(document.getElementById('m-surcharge').value),
+    parseFloat(document.getElementById('m-reussite').value),
+  ];
+  if (vals.some(isNaN)) return null;
+  // Use same two‑year default from PRESETS as context, override with current values
+  const r1 = [16, 14, 13, 6, 12, 55, 29, 66.49];
+  const r2 = vals;
+  try {
+    const body = { criteria_values: [r1, r2], success_percentages: [66.49, r2[7] || 68], next_year_criteria: r2 };
+    const res  = await fetch(API_URL + '/predict', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return Math.round(data.prediction * 100) / 100;
+  } catch(e) {
+    // Fallback: simple local estimate
+    const w = [-0.1,-0.3,0.15,-0.25,0.2,-0.3,-0.15,0.5];
+    const base = vals[7] || 68;
+    let adj = 0;
+    const ref = [16,14,13,6,12,55,29,66.49];
+    for (let i=0; i<vals.length; i++) adj += w[i]*((vals[i]-ref[i])/(Math.abs(ref[i])+0.001))*base;
+    return Math.max(0,Math.min(100,Math.round((base+adj*0.08)*100)/100));
+  }
+}
+
+async function autoPredictModal() {
+  const btn = document.querySelector('button[onclick="autoPredictModal()"]');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+  try {
+    const pred = await computeEtabPrediction();
+    if (pred === null) {
+      document.getElementById('modal-err').textContent = 'Veuillez remplir tous les KPI avant d\'auto-prédire.';
+      document.getElementById('modal-err').classList.add('show');
+      return;
+    }
+    document.getElementById('modal-err').classList.remove('show');
+    document.getElementById('m-pred').value = pred;
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  }
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────
+async function saveEtablissement() {
+  const nom  = document.getElementById('m-nom').value.trim();
+  const id   = document.getElementById('m-id').value.trim();
+  const errEl = document.getElementById('modal-err');
+  errEl.classList.remove('show');
+  document.getElementById('modal-success').classList.remove('show');
+
+  if (!nom) { errEl.textContent = 'Le nom de l\'établissement est obligatoire.'; errEl.classList.add('show'); return; }
+  if (!id)  { errEl.textContent = 'L\'identifiant est obligatoire.'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('modal-save-btn');
+
+  // Auto-prédiction à l'enregistrement : si la prédiction n'est pas renseignée
+  // mais que les 8 KPI le sont, on la calcule automatiquement via l'API.
+  if (document.getElementById('m-pred').value.trim() === '') {
+    btn.disabled = true; btn.textContent = 'Prédiction…';
+    const autoPred = await computeEtabPrediction();
+    if (autoPred !== null) document.getElementById('m-pred').value = autoPred;
+    btn.disabled = false;
+  }
+
+  // parseFloat(...) || null transforme 0 en null → perte de données. On préserve 0.
+  const numOrNull = (elId) => {
+    const raw = document.getElementById(elId).value.trim();
+    if (raw === '') return null;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : null;
+  };
+  const strOrNull = (elId) => document.getElementById(elId).value.trim() || null;
+
+  const payload = {
+    nom_etablissement:      nom,
+    identifiant:            id,
+    region:                 strOrNull('m-region'),
+    type_etablissement:     strOrNull('m-type'),
+    adresse:                strOrNull('m-adresse'),
+    charge_horaire_prof:    numOrNull('m-charge'),
+    prof_quittant:          numOrNull('m-profs'),
+    activites_culturelles:  numOrNull('m-activ'),
+    actes_violants:         numOrNull('m-violence'),
+    eleves_excellent:       numOrNull('m-excellent'),
+    eleve_abondonnant:      numOrNull('m-abandon'),
+    surcharge_classe:       numOrNull('m-surcharge'),
+    reussite_generale:      numOrNull('m-reussite'),
+    prediction_kpi:         numOrNull('m-pred'),
+  };
+
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+  let savedToApi = false;
+  let serverError = null;   // message renvoyé par l'API (HTTP 4xx/5xx)
+  try {
+    const res  = await fetch(API_URL + '/etablissements', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload), signal: AbortSignal.timeout(6000) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // L'API a répondu mais a rejeté l'enregistrement (validation, contrainte, etc.)
+      serverError = data.error || ('Erreur API (HTTP ' + res.status + ')');
+    } else {
+      savedToApi = true;
+    }
+  } catch (e) {
+    // Pas de réponse du serveur → réellement hors ligne / timeout réseau
+  }
+
+  // Erreur explicite du serveur : ne pas faire croire à un succès.
+  if (serverError) {
+    btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Enregistrer';
+    const errEl2 = document.getElementById('modal-err');
+    errEl2.textContent = 'Échec de l\'enregistrement : ' + serverError;
+    errEl2.classList.add('show');
+    return;
+  }
+
+  // Update local store
+  const idx = etabLocalStore.findIndex(r => r.identifiant === id);
+  const record = Object.assign({}, payload, { date_saisie: new Date().toISOString() });
+  if (idx >= 0) etabLocalStore[idx] = record;
+  else etabLocalStore.unshift(record);
+
+  btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Enregistrer';
+
+  document.getElementById('modal-success').textContent = savedToApi
+    ? '✅ Établissement enregistré en base de données.'
+    : '✅ Enregistré localement (API hors ligne).';
+  document.getElementById('modal-success').classList.add('show');
+
+  renderEtabTable(etabLocalStore);
+  const badge = document.getElementById('etab-count-badge');
+  if (badge) badge.textContent = etabLocalStore.length + ' établissement(s)';
+  setTimeout(() => closeEtabModal(), 1400);
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────
+async function deleteEtab(identifiant, nom) {
+  if (!confirm(`Supprimer l'établissement « ${nom} » (${identifiant}) ?`)) return;
+  try {
+    await fetch(API_URL + '/etablissements/' + encodeURIComponent(identifiant), { method: 'DELETE', signal: AbortSignal.timeout(5000) });
+  } catch (e) {}
+  etabLocalStore = etabLocalStore.filter(r => r.identifiant !== identifiant);
+  renderEtabTable(etabLocalStore);
+  const badge = document.getElementById('etab-count-badge');
+  if (badge) badge.textContent = etabLocalStore.length + ' établissement(s)';
+}
+
+/* ════════════════════════════════════════════════
+   ASSISTANT (CHATBOT) — JavaScript
+════════════════════════════════════════════════ */
+const epChatHistory = [];
+let epChatGreeted = false;
+
+// Logo de Rayen (toque de diplômé) réutilisé pour l'avatar des messages du bot.
+const RAYEN_LOGO = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v3.32L12 20l7-3.5v-3.32l-7 3.82-7-3.82z"/></svg>';
+
+function epAddMsg(text, cls){
+  const body = document.getElementById('ep-chat-body');
+  const el = document.createElement('div');
+  el.className = 'ep-msg ' + cls;
+  el.textContent = text;
+  if (cls === 'bot'){
+    const row = document.createElement('div');
+    row.className = 'ep-bot-row';
+    const av = document.createElement('div');
+    av.className = 'ep-avatar';
+    av.innerHTML = RAYEN_LOGO;
+    row.appendChild(av);
+    row.appendChild(el);
+    body.appendChild(row);
+  } else {
+    body.appendChild(el);
+  }
+  body.scrollTop = body.scrollHeight;
+  return el;
+}
+function epShowTyping(){
+  const body = document.getElementById('ep-chat-body');
+  const el = document.createElement('div');
+  el.className = 'ep-typing';
+  el.innerHTML = '<span></span><span></span><span></span>';
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+  return el;
+}
+function initAssistant(){
+  if (epChatGreeted) return;
+  epAddMsg("3aslama 👋 Ana Rayen 🇹🇳, l'assistant EduPredict. Je réponds uniquement à partir des KPI, de l'historique et des établissements enregistrés. Chnowa t7eb ta3ref ?", 'bot');
+  epChatGreeted = true;
+  const form  = document.getElementById('ep-chat-form');
+  const input = document.getElementById('ep-chat-input');
+  const send  = document.getElementById('ep-chat-send');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = input.value.trim();
+    if (!msg) return;
+    epAddMsg(msg, 'user');
+    epChatHistory.push({ role: 'user', content: msg });
+    input.value = '';
+    input.disabled = true; send.disabled = true;
+    const typing = epShowTyping();
+    try {
+      const r = await fetch(API_URL + '/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, history: epChatHistory.slice(0, -1) }),
+        signal: AbortSignal.timeout(60000)
+      });
+      typing.remove();
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok){
+        epAddMsg(data.error || 'Erreur de communication avec le serveur.', 'err');
+      } else {
+        epAddMsg(data.reply || '—', 'bot');
+        epChatHistory.push({ role: 'assistant', content: data.reply || '' });
+      }
+    } catch (err){
+      typing.remove();
+      epAddMsg("Impossible de joindre l'assistant. Vérifiez que le serveur est lancé.", 'err');
+    } finally {
+      input.disabled = false; send.disabled = false; input.focus();
+    }
+  });
+  setTimeout(() => input.focus(), 60);
+}
+
+function epAsk(q){
+  const input = document.getElementById('ep-chat-input');
+  input.value = q;
+  document.getElementById('ep-chat-form').requestSubmit();
+}
+</script>
+</body>
+</html>
+Terminé
